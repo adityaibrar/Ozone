@@ -25,6 +25,12 @@ struct VolumeMixerView: View {
             .padding(.vertical, 20)
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .onAppear {
+            service.checkPermission()
+            if service.needsPermission {
+                service.requestInitialPermissionIfNeeded()
+            }
+        }
     }
 
     // MARK: - System Volume Section
@@ -90,7 +96,9 @@ struct VolumeMixerView: View {
             if service.needsPermission {
                 PermissionNoticeBanner(
                     onRequestPermission: { service.requestPermission() },
-                    onRestartApp: { service.restartApp() }
+                    onRevealInFinder: { service.revealInFinder() },
+                    onRestartApp: { service.restartApp() },
+                    onRefresh: { service.checkPermission() }
                 )
                 .padding(.horizontal, 20)
                 .transition(.opacity.combined(with: .move(edge: .top)))
@@ -286,10 +294,12 @@ private struct AppVolumeRow: View {
 
 private struct PermissionNoticeBanner: View {
     let onRequestPermission: () -> Void
+    let onRevealInFinder: () -> Void
     let onRestartApp: () -> Void
+    let onRefresh: () -> Void
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 10) {
+        VStack(alignment: .leading, spacing: 12) {
             HStack(spacing: 12) {
                 ZStack {
                     Circle()
@@ -308,24 +318,52 @@ private struct PermissionNoticeBanner: View {
 
                     Text("macOS mewajibkan izin 'Perekaman Layar & Audio Sistem' untuk mengatur volume per aplikasi. Setelah toggle diaktifkan di Pengaturan, aplikasi wajib dimuat ulang (restart).")
                         .font(.caption)
-                        .foregroundStyle(Color.secondary)
+                        .foregroundStyle(.secondary)
                         .fixedSize(horizontal: false, vertical: true)
                 }
             }
+
+            VStack(alignment: .leading, spacing: 4) {
+                Text("Petunjuk:")
+                    .font(.caption2)
+                    .fontWeight(.semibold)
+                    .foregroundStyle(.secondary)
+                Text("1. Klik '1. Buka Pengaturan' dan aktifkan izin perekaman audio untuk **Ozone**.")
+                    .font(.caption2)
+                    .foregroundStyle(.secondary)
+                Text("2. Jika Ozone belum muncul di daftar, klik '2. Tampilkan di Finder' dan drag icon ke System Settings.")
+                    .font(.caption2)
+                    .foregroundStyle(.secondary)
+                Text("3. Klik '3. Muat Ulang App' agar perubahan izin terbaca oleh macOS.")
+                    .font(.caption2)
+                    .foregroundStyle(.secondary)
+            }
+            .padding(10)
+            .background(Color.blue.opacity(0.05), in: RoundedRectangle(cornerRadius: 8))
 
             HStack(spacing: 8) {
                 Button {
                     onRequestPermission()
                 } label: {
                     HStack(spacing: 4) {
+                        Image(systemName: "gearshape.fill")
                         Text("1. Buka Pengaturan")
                             .font(.caption)
                             .fontWeight(.medium)
-                        Image(systemName: "arrow.up.forward.app")
-                            .font(.caption2)
                     }
-                    .padding(.horizontal, 8)
-                    .padding(.vertical, 4)
+                }
+                .buttonStyle(.borderedProminent)
+                .tint(Color.blue)
+                .controlSize(.small)
+
+                Button {
+                    onRevealInFinder()
+                } label: {
+                    HStack(spacing: 4) {
+                        Image(systemName: "folder.fill")
+                        Text("2. Tampilkan di Finder")
+                            .font(.caption)
+                    }
                 }
                 .buttonStyle(.bordered)
                 .controlSize(.small)
@@ -334,21 +372,29 @@ private struct PermissionNoticeBanner: View {
                     onRestartApp()
                 } label: {
                     HStack(spacing: 4) {
-                        Text("2. Muat Ulang App")
+                        Image(systemName: "arrow.clockwise")
+                        Text("3. Muat Ulang App")
                             .font(.caption)
                             .fontWeight(.medium)
-                        Image(systemName: "arrow.clockwise")
-                            .font(.caption2)
                     }
-                    .padding(.horizontal, 8)
-                    .padding(.vertical, 4)
                 }
-                .buttonStyle(.borderedProminent)
-                .tint(Color.blue)
+                .buttonStyle(.bordered)
+                .controlSize(.small)
+
+                Button {
+                    onRefresh()
+                } label: {
+                    HStack(spacing: 4) {
+                        Image(systemName: "checkmark.circle")
+                        Text("Periksa Ulang")
+                            .font(.caption)
+                    }
+                }
+                .buttonStyle(.bordered)
                 .controlSize(.small)
             }
         }
-        .padding(12)
+        .padding(14)
         .background(
             RoundedRectangle(cornerRadius: 12)
                 .fill(Color.blue.opacity(0.06))

@@ -60,7 +60,7 @@ struct SidebarView: View {
             .tag(section)
         }
         .listStyle(.sidebar)
-        .navigationTitle("BatteryGuard")
+        .navigationTitle("Ozone")
         .frame(minWidth: 180)
     }
 }

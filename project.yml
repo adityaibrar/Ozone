@@ -41,6 +41,11 @@ targets:
         LSMinimumSystemVersion: "13.0"
         NSHumanReadableCopyright: "Copyright © 2024 IbrarDev. Open Source."
         NSInputMonitoringUsageDescription: "Ozone requires Input Monitoring permission to count keyboard key presses across all applications."
+        NSAccessibilityUsageDescription: "Ozone requires Accessibility permission to separate mouse and trackpad scroll directions."
+        NSScreenCaptureUsageDescription: "Ozone requires Screen & System Audio Recording permission to capture and adjust per-application volume levels."
+        NSAudioCaptureUsageDescription: "Ozone requires audio access to control per-application volume levels."
+        NSSystemAudioCaptureUsageDescription: "Ozone requires audio access to control per-application volume levels."
+        NSMicrophoneUsageDescription: "Ozone requires audio access to control per-application volume levels."
         SMPrivilegedExecutables:
           "com.ibrardev.Ozone.Helper": "identifier \"com.ibrardev.Ozone.Helper\""
 
@@ -117,6 +122,7 @@ targets:
       - path: BatteryGuard/Services/RAMMonitor.swift
       - path: BatteryGuard/Services/NetworkSpeedMonitor.swift
       - path: BatteryGuard/Services/TemperatureMonitor.swift
+      - path: BatteryGuard/Services/SMCTemperatureProvider.swift
       - path: BatteryGuard/Services/CPUMonitor.swift
       - path: BatteryGuard/Services/GPUMonitor.swift
       - path: BatteryGuard/Services/ChargeLimitManager.swift

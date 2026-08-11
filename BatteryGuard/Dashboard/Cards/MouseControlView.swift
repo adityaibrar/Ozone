@@ -134,12 +134,31 @@ struct MouseControlView: View {
                         .font(.headline)
                         .foregroundStyle(.primary)
 
-                    Text("macOS membutuhkan izin Aksesibilitas agar BatteryGuard dapat membedakan event scroll antara mouse fisik dan trackpad di level sistem.")
+                    Text("macOS membutuhkan izin Aksesibilitas agar Ozone dapat membedakan event scroll antara mouse fisik dan trackpad di level sistem.")
                         .font(.caption)
                         .foregroundStyle(.secondary)
                         .fixedSize(horizontal: false, vertical: true)
                 }
             }
+
+            // Quick instructions
+            VStack(alignment: .leading, spacing: 4) {
+                Text("Petunjuk:")
+                    .font(.caption2)
+                    .fontWeight(.semibold)
+                    .foregroundStyle(.secondary)
+                Text("1. Klik 'Buka Pengaturan Aksesibilitas' dan aktifkan sakelar untuk **Ozone**.")
+                    .font(.caption2)
+                    .foregroundStyle(.secondary)
+                Text("2. Jika Ozone belum muncul di daftar, klik 'Tampilkan Ozone di Finder' lalu drag icon ke jendela Pengaturan.")
+                    .font(.caption2)
+                    .foregroundStyle(.secondary)
+                Text("3. Setelah diaktifkan, klik 'Restart Ozone' agar sistem memuat izin baru.")
+                    .font(.caption2)
+                    .foregroundStyle(.secondary)
+            }
+            .padding(10)
+            .background(Color.orange.opacity(0.06), in: RoundedRectangle(cornerRadius: 8))
 
             HStack(spacing: 10) {
                 Button {
@@ -147,7 +166,7 @@ struct MouseControlView: View {
                 } label: {
                     HStack(spacing: 5) {
                         Image(systemName: "gearshape.fill")
-                        Text("Buka Pengaturan Aksesibilitas")
+                        Text("1. Buka Pengaturan Aksesibilitas")
                     }
                     .font(.caption)
                     .fontWeight(.medium)
@@ -157,13 +176,38 @@ struct MouseControlView: View {
                 .controlSize(.small)
 
                 Button {
+                    mouseService.revealInFinder()
+                } label: {
+                    HStack(spacing: 4) {
+                        Image(systemName: "folder.fill")
+                        Text("2. Tampilkan di Finder")
+                    }
+                    .font(.caption)
+                }
+                .buttonStyle(.bordered)
+                .controlSize(.small)
+
+                Button {
+                    mouseService.restartApp()
+                } label: {
+                    HStack(spacing: 4) {
+                        Image(systemName: "arrow.clockwise")
+                        Text("3. Restart Ozone")
+                    }
+                    .font(.caption)
+                    .fontWeight(.medium)
+                }
+                .buttonStyle(.bordered)
+                .controlSize(.small)
+
+                Button {
                     mouseService.refreshPermissionStatus()
                     if mouseService.hasAccessibilityPermission && prefs.mouseAutoScrollEnabled {
                         mouseService.start()
                     }
                 } label: {
                     HStack(spacing: 4) {
-                        Image(systemName: "arrow.clockwise")
+                        Image(systemName: "checkmark.circle")
                         Text("Periksa Ulang")
                     }
                     .font(.caption)

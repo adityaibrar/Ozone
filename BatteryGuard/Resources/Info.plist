@@ -35,5 +35,15 @@
 	</dict>
 	<key>NSInputMonitoringUsageDescription</key>
 	<string>Ozone requires Input Monitoring permission to count keyboard key presses across all applications.</string>
+	<key>NSAccessibilityUsageDescription</key>
+	<string>Ozone requires Accessibility permission to separate mouse and trackpad scroll directions.</string>
+	<key>NSScreenCaptureUsageDescription</key>
+	<string>Ozone requires Screen &amp; System Audio Recording permission to capture and adjust per-application volume levels.</string>
+	<key>NSAudioCaptureUsageDescription</key>
+	<string>Ozone requires audio access to control per-application volume levels.</string>
+	<key>NSSystemAudioCaptureUsageDescription</key>
+	<string>Ozone requires audio access to control per-application volume levels.</string>
+	<key>NSMicrophoneUsageDescription</key>
+	<string>Ozone requires audio access to control per-application volume levels.</string>
 </dict>
 </plist>

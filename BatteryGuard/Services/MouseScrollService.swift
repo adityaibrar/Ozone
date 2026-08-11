@@ -196,10 +196,15 @@ final class MouseScrollService: ObservableObject {
         }
     }
 
-    /// Tampilkan prompt System Settings untuk meminta Accessibility permission
+    /// Tampilkan prompt System Settings untuk meminta Accessibility permission & buka System Settings langsung
     func requestAccessibilityPermission() {
         let options = [kAXTrustedCheckOptionPrompt.takeUnretainedValue() as String: true] as CFDictionary
-        AXIsProcessTrustedWithOptions(options)
+        _ = AXIsProcessTrustedWithOptions(options)
+
+        // Buka langsung jendela Pengaturan Aksesibilitas
+        if let url = URL(string: "x-apple.systempreferences:com.apple.preference.security?Privacy_Accessibility") {
+            NSWorkspace.shared.open(url)
+        }
 
         // Polling singkat untuk mendeteksi saat user memberikan izin di Settings
         for delay in [1.0, 2.0, 3.5, 5.0, 7.0] {
@@ -209,6 +214,23 @@ final class MouseScrollService: ObservableObject {
                 if self.hasAccessibilityPermission && self.prefs.mouseAutoScrollEnabled && !self.isActive {
                     self.start()
                 }
+            }
+        }
+    }
+
+    /// Tampilkan file Ozone.app di Finder untuk memudahkan drag & drop atau add manual jika di-build via Xcode
+    func revealInFinder() {
+        let bundleURL = Bundle.main.bundleURL
+        NSWorkspace.shared.activateFileViewerSelecting([bundleURL])
+    }
+
+    /// Restart Ozone agar macOS memuat credential TCC yang baru diberikan pengguna
+    func restartApp() {
+        let bundleURL = Bundle.main.bundleURL
+        let config = NSWorkspace.OpenConfiguration()
+        NSWorkspace.shared.openApplication(at: bundleURL, configuration: config) { _, _ in
+            DispatchQueue.main.async {
+                NSApp.terminate(nil)
             }
         }
     }

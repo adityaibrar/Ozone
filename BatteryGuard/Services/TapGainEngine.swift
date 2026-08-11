@@ -70,6 +70,7 @@ final class TapGainEngine: GainEngine {
         var newTapID: AudioObjectID = 0
         let tapStatus = AudioHardwareCreateProcessTap(description, &newTapID)
         guard tapStatus == noErr, newTapID != 0 else {
+            print("❌ [TapGainEngine] AudioHardwareCreateProcessTap failed with status: \(tapStatus) (objects: \(objects))")
             return nil
         }
         self.tapID = newTapID
@@ -93,6 +94,7 @@ final class TapGainEngine: GainEngine {
         var newAggID: AudioObjectID = 0
         let aggStatus = AudioHardwareCreateAggregateDevice(aggregateConfig as CFDictionary, &newAggID)
         guard aggStatus == noErr, newAggID != 0 else {
+            print("❌ [TapGainEngine] AudioHardwareCreateAggregateDevice failed with status: \(aggStatus)")
             AudioHardwareDestroyProcessTap(newTapID)
             return nil
         }
@@ -147,6 +149,7 @@ final class TapGainEngine: GainEngine {
         }
 
         guard ioStatus == noErr, let procID = newProcID else {
+            print("❌ [TapGainEngine] AudioDeviceCreateIOProcIDWithBlock failed with status: \(ioStatus)")
             AudioHardwareDestroyAggregateDevice(newAggID)
             AudioHardwareDestroyProcessTap(newTapID)
             return nil
@@ -158,9 +161,11 @@ final class TapGainEngine: GainEngine {
 
         let startStatus = AudioDeviceStart(newAggID, procID)
         guard startStatus == noErr else {
+            print("❌ [TapGainEngine] AudioDeviceStart failed with status: \(startStatus)")
             stop()
             return nil
         }
+        print("✅ [TapGainEngine] Successfully started Process Tap for \(objects.count) object(s)")
     }
 
     // MARK: - Sample Rate Watcher
@@ -183,7 +188,7 @@ final class TapGainEngine: GainEngine {
         Unmanaged<ReleaseBox>.fromOpaque(client).release()
     }
 
-    private static let rateQueue = DispatchQueue(label: "com.ibrardev.batteryguard.mixer.rate", qos: .userInitiated)
+    private static let rateQueue = DispatchQueue(label: "com.ibrardev.ozone.mixer.rate", qos: .userInitiated)
 
     private static let sampleRateListener: AudioObjectPropertyListenerProc = { deviceID, _, _, client in
         guard let client else { return noErr }

@@ -56,8 +56,8 @@ final class VolumeMixerService: ObservableObject {
     private var globalListenersInstalled = false
     private var permissionObserver: NSObjectProtocol?
 
-    private let halQueue = DispatchQueue(label: "com.ibrardev.batteryguard.mixer.hal", qos: .userInitiated)
-    private let buildQueue = DispatchQueue(label: "com.ibrardev.batteryguard.mixer.build", qos: .userInitiated)
+    private let halQueue = DispatchQueue(label: "com.ibrardev.ozone.mixer.hal", qos: .userInitiated)
+    private let buildQueue = DispatchQueue(label: "com.ibrardev.ozone.mixer.build", qos: .userInitiated)
 
     /// Cache volume per bundleIdentifier yang tersimpan di disk
     private var savedVolumes: [String: Float] {
@@ -72,6 +72,7 @@ final class VolumeMixerService: ObservableObject {
         loadSystemVolume()
         registerGlobalListeners()
         startPolling()
+        checkPermission()
     }
 
     deinit {
@@ -91,21 +92,44 @@ final class VolumeMixerService: ObservableObject {
     @discardableResult
     func checkPermission() -> Bool {
         let granted = CGPreflightScreenCaptureAccess()
-        if granted && needsPermission {
-            needsPermission = false
+        self.needsPermission = !granted
+        if granted {
             reconcileEngines(with: self.apps)
         }
         return granted
     }
 
+    /// Memicu prompt sistem izin Screen & Audio Recording pada macOS jika belum diberikan saat pertama kali dibuka
+    func requestInitialPermissionIfNeeded() {
+        let granted = CGPreflightScreenCaptureAccess()
+        if !granted {
+            _ = CGRequestScreenCaptureAccess()
+            self.needsPermission = true
+        }
+    }
+
+    /// Tampilkan prompt izin dan buka jendela System Settings -> Screen & System Audio Recording
     func requestPermission() {
         _ = CGRequestScreenCaptureAccess()
         if let url = URL(string: "x-apple.systempreferences:com.apple.preference.security?Privacy_ScreenCapture") {
             NSWorkspace.shared.open(url)
         }
+
+        // Polling singkat untuk memperbarui status saat user mengaktifkan switch di System Settings
+        for delay in [1.0, 2.0, 3.5, 5.0, 7.0] {
+            DispatchQueue.main.asyncAfter(deadline: .now() + delay) { [weak self] in
+                self?.checkPermission()
+            }
+        }
     }
 
-    /// Memuat ulang (restart) aplikasi BatteryGuard agar izin TCC yang baru diberikan diaktifkan oleh macOS
+    /// Tampilkan file Ozone.app di Finder untuk memudahkan drag & drop manual ke System Settings jika diperlukan
+    func revealInFinder() {
+        let bundleURL = Bundle.main.bundleURL
+        NSWorkspace.shared.activateFileViewerSelecting([bundleURL])
+    }
+
+    /// Memuat ulang (restart) aplikasi Ozone agar izin TCC yang baru diberikan diaktifkan oleh macOS
     func restartApp() {
         let bundleURL = Bundle.main.bundleURL
         let config = NSWorkspace.OpenConfiguration()
@@ -127,9 +151,10 @@ final class VolumeMixerService: ObservableObject {
     }
 
     private func clearPermissionIfNoActiveAdjustments() {
-        guard needsPermission,
-              !apps.contains(where: { !MixerRoutingSupport.isUnity($0.volume) }) else { return }
-        needsPermission = false
+        let granted = CGPreflightScreenCaptureAccess()
+        if granted {
+            needsPermission = false
+        }
     }
 
     // MARK: - HAL Listeners & System Volume Sync
