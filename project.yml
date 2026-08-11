@@ -122,6 +122,7 @@ targets:
       - path: BatteryGuard/Services/RAMMonitor.swift
       - path: BatteryGuard/Services/NetworkSpeedMonitor.swift
       - path: BatteryGuard/Services/TemperatureMonitor.swift
+      - path: BatteryGuard/Services/SMCTemperatureProvider.swift
       - path: BatteryGuard/Services/CPUMonitor.swift
       - path: BatteryGuard/Services/GPUMonitor.swift
       - path: BatteryGuard/Services/ChargeLimitManager.swift

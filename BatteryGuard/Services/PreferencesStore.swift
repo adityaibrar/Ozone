@@ -3,6 +3,7 @@
 
 import Foundation
 import SwiftUI
+import ServiceManagement
 
 // MARK: - PreferencesStore
 
@@ -20,6 +21,15 @@ final class PreferencesStore: ObservableObject {
     @AppStorage("isChargeLimitEnabled") var isChargeLimitEnabled: Bool = false
     /// Apakah discharge mode aktif
     @AppStorage("isDischargeModeEnabled") var isDischargeModeEnabled: Bool = false
+
+    // MARK: - Startup
+
+    /// Buka aplikasi secara otomatis saat login
+    @AppStorage("launchAtLogin") var launchAtLogin: Bool = false {
+        didSet {
+            updateLaunchAtLoginState()
+        }
+    }
 
     // MARK: - Notifications
 
@@ -107,5 +117,28 @@ final class PreferencesStore: ObservableObject {
     /// Bundle ID helper untuk SMAppService
     let helperBundleID = "com.ibrardev.Ozone.Helper"
 
-    private init() {}
+    private init() {
+        // Sinkronisasi status riil dengan preference di UserDefaults saat init
+        let isRegistered = SMAppService.mainApp.status == .enabled
+        if launchAtLogin != isRegistered {
+            launchAtLogin = isRegistered
+        }
+    }
+    
+    private func updateLaunchAtLoginState() {
+        do {
+            if launchAtLogin {
+                if SMAppService.mainApp.status != .enabled {
+                    try SMAppService.mainApp.register()
+                }
+            } else {
+                if SMAppService.mainApp.status == .enabled {
+                    try SMAppService.mainApp.unregister()
+                }
+            }
+        } catch {
+            print("Gagal mengubah status Launch at Login: \(error.localizedDescription)")
+        }
+    }
 }
+

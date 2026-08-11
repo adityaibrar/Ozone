@@ -63,6 +63,10 @@ private struct GeneralSettingsTab: View {
 
     var body: some View {
         Form {
+            Section("Startup") {
+                Toggle("Buka aplikasi otomatis saat login", isOn: $prefs.launchAtLogin)
+            }
+
             Section("Charge Limiter") {
                 Toggle("Enable Charge Limit on Launch", isOn: $prefs.isChargeLimitEnabled)
                 HStack {

@@ -25,6 +25,7 @@
 		4A00C125FBB1B7CFA0A9B7DA /* ChargeLimitManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 90C78E6F187E271B692D75AA /* ChargeLimitManager.swift */; };
 		4A71857D9AACB86AFFA2224A /* RAMMonitor.swift in Sources */ = {isa = PBXBuildFile; fileRef = D1BF1E32832F05B933A79470 /* RAMMonitor.swift */; };
 		4E187F666F1EB4B1ED24FD0E /* MouseControlView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1CCCFAC2C8D4654AA28636C1 /* MouseControlView.swift */; };
+		4FD947C564855FBFAA3159E1 /* SMCTemperatureProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = C24DEA16CA1D4B2029574AEB /* SMCTemperatureProvider.swift */; };
 		50C1ACD19F70CE087C3DBA47 /* BatteryCyclesCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2BE068ABDF4C1C0EAC751CBF /* BatteryCyclesCard.swift */; };
 		566AE900BA2A671A797D0F65 /* PowerConsumptionCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = BA6FF01ABE1BD8B55EBA441A /* PowerConsumptionCard.swift */; };
 		56E8ED28C4E9FE747DAFDA7C /* SMCController.swift in Sources */ = {isa = PBXBuildFile; fileRef = ED01BB0F8977EA76C4A4DC27 /* SMCController.swift */; };
@@ -134,6 +135,7 @@
 		BA6FF01ABE1BD8B55EBA441A /* PowerConsumptionCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PowerConsumptionCard.swift; sourceTree = "<group>"; };
 		C0DCD42CE060F6167BA85948 /* RAMStats.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RAMStats.swift; sourceTree = "<group>"; };
 		C19B5651C7630D18B24B9FE5 /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
+		C24DEA16CA1D4B2029574AEB /* SMCTemperatureProvider.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SMCTemperatureProvider.swift; sourceTree = "<group>"; };
 		CA18CA8BA2D560551AC88712 /* GPUStats.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GPUStats.swift; sourceTree = "<group>"; };
 		CFB002782B3246DFA0F79933 /* CalibrationCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CalibrationCard.swift; sourceTree = "<group>"; };
 		D158A254CE0B3A9AE6CB8BCA /* PreferencesStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PreferencesStore.swift; sourceTree = "<group>"; };
@@ -263,6 +265,7 @@
 				D158A254CE0B3A9AE6CB8BCA /* PreferencesStore.swift */,
 				D1BF1E32832F05B933A79470 /* RAMMonitor.swift */,
 				DF371F5A19ACFE69D007A1E9 /* ResponsibleProcess.swift */,
+				C24DEA16CA1D4B2029574AEB /* SMCTemperatureProvider.swift */,
 				8922918AA42B2943E3F95EAF /* TapGainEngine.swift */,
 				AFA09F9F4F15A8588019B826 /* TemperatureMonitor.swift */,
 				7872613FF72E88603693A4D2 /* UninstallerService.swift */,
@@ -537,6 +540,7 @@
 				4A71857D9AACB86AFFA2224A /* RAMMonitor.swift in Sources */,
 				ADE9753B966446825FE0A8D4 /* RAMStats.swift in Sources */,
 				76B33FD7693FF1E95963E877 /* ResponsibleProcess.swift in Sources */,
+				4FD947C564855FBFAA3159E1 /* SMCTemperatureProvider.swift in Sources */,
 				9F32BB3136C370D8CBABC8EA /* SettingsView.swift in Sources */,
 				E8332C46EFF0801BDF8222EE /* SidebarView.swift in Sources */,
 				CB3774F37349A0BCEFA17860 /* StatusBarMetricView.swift in Sources */,
