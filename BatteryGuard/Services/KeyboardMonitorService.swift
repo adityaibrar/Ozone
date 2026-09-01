@@ -51,6 +51,19 @@ final class KeyboardMonitorService: ObservableObject {
     /// Timer periodik untuk memantau status izin
     private var permissionTimer: Timer?
 
+    // MARK: - Batching State
+    // Key press events diakumulasi di buffer ini, lalu di-flush ke main thread
+    // setiap 250ms — jauh lebih efisien dari dispatch per-keypress.
+    private struct PendingKeyPress {
+        let deviceID: String
+        let deviceName: String
+        let isInternal: Bool
+        let keyLabel: String
+    }
+    /// Buffer yang diisi dari IOHIDManager callback (main run loop thread)
+    private var pendingPresses: [PendingKeyPress] = []
+    private var batchFlushTimer: DispatchSourceTimer?
+
     private init() {
         refreshPermissionStatus()
         setupPermissionWatcher()
@@ -166,9 +179,13 @@ final class KeyboardMonitorService: ObservableObject {
             }
             .store(in: &cancellables)
 
-        // 2. Periodic watcher ringan tiap 1.5 detik jika permission belum aktif atau service belum jalan
+        // 2. Periodic watcher — interval 15 detik (bukan 1.5) karena:
+        //    - CGPreflightListenEventAccess() + IOHIDCheckAccess() = double IPC call ke securityd
+        //    - didBecomeActiveNotification sudah menangani case utama
+        //    - Timer ini hanya backup edge case saja
+        //    - Saat sudah aktif → timer di-invalidate otomatis
         permissionTimer?.invalidate()
-        permissionTimer = Timer.scheduledTimer(withTimeInterval: 1.5, repeats: true) { [weak self] _ in
+        permissionTimer = Timer.scheduledTimer(withTimeInterval: 15.0, repeats: true) { [weak self] timer in
             guard let self else { return }
             let granted = Self.checkInputMonitoringAccess()
             if self.hasInputMonitoringPermission != granted {
@@ -176,6 +193,11 @@ final class KeyboardMonitorService: ObservableObject {
             }
             if granted && self.prefs.keyboardMonitorEnabled && !self.isActive {
                 self.start()
+            }
+            // Sudah granted dan aktif → tidak perlu polling lagi
+            if granted && self.isActive {
+                timer.invalidate()
+                self.permissionTimer = nil
             }
         }
     }
@@ -277,6 +299,10 @@ final class KeyboardMonitorService: ObservableObject {
 
         DispatchQueue.main.async { self.isActive = true }
 
+        // Mulai batch flush timer: flush key presses ke UI setiap 250ms
+        // Jauh lebih efisien dari dispatch per-keypress.
+        startBatchFlushTimer()
+
         // Auto-save setiap 30 detik agar data tidak hilang jika app crash
         saveTimer?.invalidate()
         saveTimer = Timer.scheduledTimer(withTimeInterval: 30.0, repeats: true) { [weak self] _ in
@@ -289,6 +315,14 @@ final class KeyboardMonitorService: ObservableObject {
     func stop() {
         saveTimer?.invalidate()
         saveTimer = nil
+
+        // Stop batch flush timer dan flush sisa buffer
+        batchFlushTimer?.cancel()
+        batchFlushTimer = nil
+        flushPendingKeyPresses() // flush sisa sebelum stop
+
+        // Restart permission watcher karena service berhenti
+        setupPermissionWatcher()
 
         if let manager = hidManager {
             IOHIDManagerUnscheduleFromRunLoop(manager, CFRunLoopGetMain(), CFRunLoopMode.commonModes.rawValue)
@@ -345,6 +379,40 @@ final class KeyboardMonitorService: ObservableObject {
 
     // MARK: - Input Value Handling
 
+    // MARK: Batching
+
+    /// Mulai timer flush batch key presses ke store + UI setiap 250ms.
+    /// Dipanggil dari start() — berjalan di main queue agar thread-safe dengan pendingPresses.
+    private func startBatchFlushTimer() {
+        batchFlushTimer?.cancel()
+        let timer = DispatchSource.makeTimerSource(queue: .main)
+        timer.schedule(deadline: .now() + 0.25, repeating: 0.25, leeway: .milliseconds(50))
+        timer.setEventHandler { [weak self] in
+            self?.flushPendingKeyPresses()
+        }
+        timer.resume()
+        batchFlushTimer = timer
+    }
+
+    /// Flush semua key press yang terakumulasi di buffer ke store dan trigger UI update.
+    /// Dipanggil dari main thread (via batchFlushTimer atau stop()).
+    private func flushPendingKeyPresses() {
+        guard !pendingPresses.isEmpty else { return }
+        let batch = pendingPresses
+        pendingPresses.removeAll(keepingCapacity: true)
+
+        for press in batch {
+            store.increment(
+                deviceID: press.deviceID,
+                deviceName: press.deviceName,
+                isInternal: press.isInternal,
+                keyLabel: press.keyLabel
+            )
+        }
+        // Satu objectWillChange per batch (bukan per-keypress)
+        objectWillChange.send()
+    }
+
     func handleInputValue(sender: UnsafeMutableRawPointer?, value: IOHIDValue) {
         let element = IOHIDValueGetElement(value)
         let usagePage = Int(IOHIDElementGetUsagePage(element))
@@ -381,18 +449,16 @@ final class KeyboardMonitorService: ObservableObject {
             isInternal = first?.isInternal ?? false
         }
 
-        // Update store (harus di main thread karena store.data tidak thread-safe)
-        DispatchQueue.main.async { [weak self] in
-            guard let self else { return }
-            self.store.increment(
-                deviceID: deviceID,
-                deviceName: deviceName,
-                isInternal: isInternal,
-                keyLabel: keyLabel
-            )
-            // Trigger SwiftUI update
-            self.objectWillChange.send()
-        }
+        // Akumulasi ke buffer — TIDAK dispatch ke main per-keypress.
+        // batchFlushTimer akan flush seluruh buffer ke store setiap 250ms.
+        // Ini mengurangi context switch drastis saat user mengetik cepat.
+        // IOHIDManager callback berjalan di main run loop — pendingPresses aman diakses langsung.
+        pendingPresses.append(PendingKeyPress(
+            deviceID: deviceID,
+            deviceName: deviceName,
+            isInternal: isInternal,
+            keyLabel: keyLabel
+        ))
     }
 
     // MARK: - Reset Methods

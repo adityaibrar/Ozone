@@ -38,6 +38,26 @@ final class ChargeLimitManager: ObservableObject {
         )
     }
 
+    // MARK: - Restore on Launch (Layer 2 — backup)
+
+    /// Dipanggil saat Main App launch untuk re-sinkronkan limit ke helper.
+    ///
+    /// Helper daemon sudah bisa auto-restore dari persistent config (Layer 1),
+    /// tapi ini berfungsi sebagai backup untuk memastikan sinkronisasi:
+    /// - Jika user mengubah limit dari UI sebelum restart
+    /// - Jika persistent config file corrupt atau terhapus
+    /// - Sebagai heartbeat pertama dari Main App ke helper
+    func restoreOnLaunch() {
+        guard state.isEnabled, state.limitPercent < 100 else {
+            NSLog("[ChargeLimitManager] restoreOnLaunch: limit disabled atau 100%%, skip")
+            return
+        }
+
+        NSLog("[ChargeLimitManager] 🔄 restoreOnLaunch: re-apply limit %d%% ke helper",
+              state.limitPercent)
+        applyCurrentState()
+    }
+
     // MARK: - Set Charge Limit
 
     /// Set limit charging (20-100%) dan apply ke helper

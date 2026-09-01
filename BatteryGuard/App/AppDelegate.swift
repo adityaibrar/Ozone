@@ -147,7 +147,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     }
 
     @objc private func handlePowerChange(_ notification: Notification) {
-        // Re-check limit setelah wake dari sleep
+        // Re-apply limit setelah wake dari sleep.
+        // SMC state mungkin ter-reset setelah deep sleep pada beberapa model Mac.
+        NSLog("[AppDelegate] Wake from sleep detected, re-apply charge limit")
+        viewModel.chargeLimitManager.restoreOnLaunch()
     }
 
     // MARK: - Window Management

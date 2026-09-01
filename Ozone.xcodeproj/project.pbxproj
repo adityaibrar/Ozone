@@ -41,7 +41,7 @@
 		73EA50F48E5B4612A899F411 /* PowerFlowCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = 077375645146AC6ED1D2E2BE /* PowerFlowCard.swift */; };
 		75598CEA7661BBE00C778666 /* KeyboardMonitorService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2F7AF948F7283E7CF4C27037 /* KeyboardMonitorService.swift */; };
 		76B33FD7693FF1E95963E877 /* ResponsibleProcess.swift in Sources */ = {isa = PBXBuildFile; fileRef = DF371F5A19ACFE69D007A1E9 /* ResponsibleProcess.swift */; };
-		79A9D1F34315613300808D74 /* com.ibrardev.Ozone.Helper in Resources */ = {isa = PBXBuildFile; fileRef = 1BCB561FED45D1C86F1BDF86 /* com.ibrardev.Ozone.Helper */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
+		79A9D1F34315613300808D74 /* OzoneHelper in Resources */ = {isa = PBXBuildFile; fileRef = 1BCB561FED45D1C86F1BDF86 /* OzoneHelper */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 		7F68C4BC8CB41B713D00167F /* TemperatureMonitor.swift in Sources */ = {isa = PBXBuildFile; fileRef = AFA09F9F4F15A8588019B826 /* TemperatureMonitor.swift */; };
 		7F81BAA21B73043EC86265F9 /* UninstallerModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7433D417FFC7AF3A93F76D69 /* UninstallerModels.swift */; };
 		83BC5161D27FBA17C0260394 /* ServiceManagement.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = ED3DB3B815D2E31C5ED5F608 /* ServiceManagement.framework */; };
@@ -92,7 +92,7 @@
 		11B573512C9F5E64A1CA8138 /* KeyboardStatsStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KeyboardStatsStore.swift; sourceTree = "<group>"; };
 		13FFDE068E0ACAFA80CFF32A /* IOKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = IOKit.framework; path = System/Library/Frameworks/IOKit.framework; sourceTree = SDKROOT; };
 		15B59F52C97D17E03A812D09 /* DashboardCardView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DashboardCardView.swift; sourceTree = "<group>"; };
-		1BCB561FED45D1C86F1BDF86 /* com.ibrardev.Ozone.Helper */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = com.ibrardev.Ozone.Helper; sourceTree = BUILT_PRODUCTS_DIR; };
+		1BCB561FED45D1C86F1BDF86 /* OzoneHelper */ = {isa = PBXFileReference; includeInIndex = 0; path = OzoneHelper; sourceTree = BUILT_PRODUCTS_DIR; };
 		1CCCFAC2C8D4654AA28636C1 /* MouseControlView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MouseControlView.swift; sourceTree = "<group>"; };
 		1D8A61B83C3806C9EE5DDFBD /* MouseScrollService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MouseScrollService.swift; sourceTree = "<group>"; };
 		1E81211283E9C1D39960EADA /* MixerRoutingSupport.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MixerRoutingSupport.swift; sourceTree = "<group>"; };
@@ -223,7 +223,7 @@
 			isa = PBXGroup;
 			children = (
 				9C4C83F9B530BE17FFAA2075 /* Ozone.app */,
-				1BCB561FED45D1C86F1BDF86 /* com.ibrardev.Ozone.Helper */,
+				1BCB561FED45D1C86F1BDF86 /* OzoneHelper */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -397,7 +397,7 @@
 			packageProductDependencies = (
 			);
 			productName = OzoneHelper;
-			productReference = 1BCB561FED45D1C86F1BDF86 /* com.ibrardev.Ozone.Helper */;
+			productReference = 1BCB561FED45D1C86F1BDF86 /* OzoneHelper */;
 			productType = "com.apple.product-type.tool";
 		};
 		92D0371CDAF27D7597B8117D /* Ozone */ = {
@@ -464,7 +464,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				B39EB6649AA318F4E4AE2C0C /* Assets.xcassets in Resources */,
-				79A9D1F34315613300808D74 /* com.ibrardev.Ozone.Helper in Resources */,
+				79A9D1F34315613300808D74 /* OzoneHelper in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -643,7 +643,6 @@
 		4DCB6201D61CAE59FC05776D /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				ARCHS = "$(ARCHS_STANDARD)";
 				CODE_SIGN_ENTITLEMENTS = BatteryGuardHelper/BatteryGuardHelper.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
@@ -673,7 +672,6 @@
 		AC90FD9F2B315C7D285D3393 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				ARCHS = "$(ARCHS_STANDARD)";
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_ENTITLEMENTS = BatteryGuard/Resources/BatteryGuard.entitlements;
 				CODE_SIGN_STYLE = Automatic;
@@ -696,7 +694,6 @@
 		C4E1A8245B4924283FF62712 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				ARCHS = "$(ARCHS_STANDARD)";
 				CODE_SIGN_ENTITLEMENTS = BatteryGuardHelper/BatteryGuardHelper.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
@@ -792,7 +789,6 @@
 		E6AEC18F201A4F2252FF036D /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				ARCHS = "$(ARCHS_STANDARD)";
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_ENTITLEMENTS = BatteryGuard/Resources/BatteryGuard.entitlements;
 				CODE_SIGN_STYLE = Automatic;

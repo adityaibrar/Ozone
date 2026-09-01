@@ -267,12 +267,17 @@ final class ChargeMonitor {
     private var currentLimit: Int = 100
     private var isInhibiting: Bool? = nil // Optional agar bisa force-sync di awal
 
+    /// Property publik untuk query state dari luar (dipakai HelperTool)
+    private(set) var isCurrentlyMonitoring: Bool = false
+    var currentActiveLimit: Int { currentLimit }
+
     /// Berapa persen di bawah limit sebelum charging diizinkan kembali
     /// Default 2% → set 75% berarti charging berhenti di 75%, start lagi di 73%
     var hysteresis: Int = 2
 
-    /// Interval polling dalam detik — 5 detik agar responsif saat charging cepat
-    var pollInterval: TimeInterval = 5
+    /// Interval polling dalam detik — 10 detik sudah cukup karena battery %
+    /// berubah ~1% per menit. Polling lebih jarang = CPU helper lebih rendah.
+    var pollInterval: TimeInterval = 10
 
     // MARK: - Public API
 
@@ -280,6 +285,7 @@ final class ChargeMonitor {
     func startMonitoring(limit: Int) {
         currentLimit = limit
         isInhibiting = nil // Force sync dengan SMC
+        isCurrentlyMonitoring = true
 
         NSLog("[ChargeMonitor] Start monitoring — limit: %d%%, hysteresis: %d%%, poll: %.0fs",
               limit, hysteresis, pollInterval)
@@ -314,6 +320,7 @@ final class ChargeMonitor {
         currentLimit = 100 // Kembalikan batas BCLM ke 100%
         setChargeInhibit(false)
         isInhibiting = nil
+        isCurrentlyMonitoring = false
         NSLog("[ChargeMonitor] Monitoring dihentikan, charging diizinkan kembali")
     }
 
@@ -326,8 +333,12 @@ final class ChargeMonitor {
         }
 
         let charging = BatteryReader.isCharging()
+        // Log detail hanya di DEBUG build — NSLog di production menulis ke unified log
+        // setiap 10 detik dan ada overhead I/O yang tidak perlu.
+        #if DEBUG
         NSLog("[ChargeMonitor] Poll: battery=%d%%, limit=%d%%, inhibiting=%@, charging=%@",
               currentPct, currentLimit, (isInhibiting == true) ? "YES" : (isInhibiting == false ? "NO" : "UNKNOWN"), charging ? "YES" : "NO")
+        #endif
 
         if currentPct >= currentLimit {
             // Baterai mencapai atau melewati limit — STOP charging

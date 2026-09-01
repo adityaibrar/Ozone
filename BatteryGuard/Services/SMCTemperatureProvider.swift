@@ -112,51 +112,69 @@ final class SMCClient {
 
 final class SMCTemperatureProvider: TemperatureProviding {
     private let client: SMCClient?
-    
-    // Apple Silicon + Intel CPU keys
-    private let cpuKeys = [
+
+    // Semua kandidat key per generasi chip \u2014 dipakai hanya untuk probing awal
+    private let cpuKeyCandidates = [
         "Tp09", "Tp0T", "Tp01", "Tp05", "Tp0D", "Tp0H", "Tp0L", "Tp0P", "Tp0X", "Tp0b", // M1
-        "Tp1h", "Tp1t", "Tp1p", "Tp1l", "Tp0f", "Tp0j", // M2
-        "Te05", "Te0L", "Te0P", "Te0S", "Tf04", "Tf09", "Tf0A", "Tf0B", "Tf0D", "Tf0E", "Tf44", "Tf49", "Tf4A", "Tf4B", "Tf4D", "Tf4E", // M3
-        "TC0D", "TC0E", "TC0F", "TC0P", "TC1C", "TC2C", "TC3C", "TC4C", "TC5C", "TC6C" // Intel
+        "Tp1h", "Tp1t", "Tp1p", "Tp1l", "Tp0f", "Tp0j",                                   // M2
+        "Te05", "Te0L", "Te0P", "Te0S", "Tf04", "Tf09", "Tf0A", "Tf0B", "Tf0D", "Tf0E",
+        "Tf44", "Tf49", "Tf4A", "Tf4B", "Tf4D", "Tf4E",                                   // M3
+        "TC0D", "TC0E", "TC0F", "TC0P", "TC1C", "TC2C", "TC3C", "TC4C", "TC5C", "TC6C"   // Intel
     ]
-    
-    // Battery keys
-    private let batteryKeys = ["TB0T", "TB1T", "TB2T", "TB3T"]
-    
+    private let batteryKeyCandidates = ["TB0T", "TB1T", "TB2T", "TB3T"]
+
+    /// Key yang benar-benar ada di hardware ini (diisi sekali saat probe pertama).
+    /// Setelah probe, polling hanya iterasi 2\u20134 key ini, bukan 30+ kandidat.
+    private var validCPUKeys: [String]?
+    private var validBatteryKeys: [String]?
+
     init() {
         self.client = SMCClient()
     }
-    
+
     func fetchTemperatures() -> SystemTemperatures {
         guard let client = client else {
             return SystemTemperatures(cpuTemperature: nil, batteryTemperature: nil, allReadings: [], timestamp: Date())
         }
-        
-        let cpuTemp = getMaxTemperature(keys: cpuKeys, client: client)
-        let batteryTemp = getMaxTemperature(keys: batteryKeys, client: client)
-        
+
+        // Probe sekali untuk menemukan key yang valid di hardware ini.
+        // Setelah ini, validCPUKeys/validBatteryKeys tidak nil \u2014 probe tidak diulang.
+        if validCPUKeys == nil {
+            validCPUKeys = cpuKeyCandidates.filter { key in
+                guard let temp = client.readTemperature(key: key) else { return false }
+                return temp > 1.0 && temp < 130.0
+            }
+            validBatteryKeys = batteryKeyCandidates.filter { key in
+                guard let temp = client.readTemperature(key: key) else { return false }
+                return temp > 1.0 && temp < 130.0
+            }
+        }
+
+        let now = Date()
+        let cpuTemp = getMaxTemperature(keys: validCPUKeys ?? [], client: client)
+        let batteryTemp = getMaxTemperature(keys: validBatteryKeys ?? [], client: client)
+
         var readings: [TemperatureReading] = []
         var cpuReading: TemperatureReading? = nil
         var batteryReading: TemperatureReading? = nil
-        
+
         if let c = cpuTemp {
-            cpuReading = TemperatureReading(sensorName: "CPU (SMC)", celsius: c, timestamp: Date())
+            cpuReading = TemperatureReading(sensorName: "CPU (SMC)", celsius: c, timestamp: now)
             readings.append(cpuReading!)
         }
         if let b = batteryTemp {
-            batteryReading = TemperatureReading(sensorName: "Battery (SMC)", celsius: b, timestamp: Date())
+            batteryReading = TemperatureReading(sensorName: "Battery (SMC)", celsius: b, timestamp: now)
             readings.append(batteryReading!)
         }
-        
+
         return SystemTemperatures(
             cpuTemperature: cpuReading,
             batteryTemperature: batteryReading,
             allReadings: readings,
-            timestamp: Date()
+            timestamp: now
         )
     }
-    
+
     private func getMaxTemperature(keys: [String], client: SMCClient) -> Double? {
         var maxTemp: Double? = nil
         for key in keys {
