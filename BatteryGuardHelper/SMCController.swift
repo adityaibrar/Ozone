@@ -267,6 +267,10 @@ final class ChargeMonitor {
     private var currentLimit: Int = 100
     private var isInhibiting: Bool? = nil // Optional agar bisa force-sync di awal
 
+    /// Property publik untuk query state dari luar (dipakai HelperTool)
+    private(set) var isCurrentlyMonitoring: Bool = false
+    var currentActiveLimit: Int { currentLimit }
+
     /// Berapa persen di bawah limit sebelum charging diizinkan kembali
     /// Default 2% → set 75% berarti charging berhenti di 75%, start lagi di 73%
     var hysteresis: Int = 2
@@ -280,6 +284,7 @@ final class ChargeMonitor {
     func startMonitoring(limit: Int) {
         currentLimit = limit
         isInhibiting = nil // Force sync dengan SMC
+        isCurrentlyMonitoring = true
 
         NSLog("[ChargeMonitor] Start monitoring — limit: %d%%, hysteresis: %d%%, poll: %.0fs",
               limit, hysteresis, pollInterval)
@@ -314,6 +319,7 @@ final class ChargeMonitor {
         currentLimit = 100 // Kembalikan batas BCLM ke 100%
         setChargeInhibit(false)
         isInhibiting = nil
+        isCurrentlyMonitoring = false
         NSLog("[ChargeMonitor] Monitoring dihentikan, charging diizinkan kembali")
     }
 

@@ -6,20 +6,118 @@
 //   - Saat battery% >= limit → tulis CH0B = 0x02 (stop charging)
 //   - Saat battery% <= limit - hysteresis → tulis CH0B = 0x00 (allow charging)
 //   - Hysteresis default 2% mencegah toggling terlalu cepat
+//
+// PERSISTENT CONFIG:
+//   Limit disimpan ke /Library/Application Support/BatteryGuard/charge_limit.json
+//   agar daemon bisa auto-restore saat boot tanpa menunggu Main App.
 
 import Foundation
 import IOKit
+
+// MARK: - Persistent Charge Limit Config
+
+/// Model data untuk persistensi charge limit ke disk.
+/// Disimpan sebagai JSON agar mudah di-debug dan di-inspect manual.
+struct PersistentChargeLimitConfig: Codable {
+    let limit: Int
+    let enabled: Bool
+    let timestamp: Date
+}
+
+/// Utilitas baca/tulis config charge limit ke file JSON di path persistent.
+///
+/// Path: `/Library/Application Support/BatteryGuard/charge_limit.json`
+/// - Helper berjalan sebagai root → punya akses tulis ke /Library/
+/// - Path ini survive reboot
+/// - Terpisah dari UserDefaults domain Main App maupun Helper
+enum PersistentConfigStore {
+
+    /// Path lengkap file config
+    static let configDir = "/Library/Application Support/BatteryGuard"
+    static let configPath = "\(configDir)/charge_limit.json"
+
+    /// Simpan config ke disk (thread-safe, atomic write)
+    static func save(limit: Int, enabled: Bool) {
+        let config = PersistentChargeLimitConfig(
+            limit: limit,
+            enabled: enabled,
+            timestamp: Date()
+        )
+
+        do {
+            // Pastikan directory ada
+            let fm = FileManager.default
+            if !fm.fileExists(atPath: configDir) {
+                try fm.createDirectory(atPath: configDir,
+                                       withIntermediateDirectories: true,
+                                       attributes: [.posixPermissions: 0o755])
+            }
+
+            let encoder = JSONEncoder()
+            encoder.outputFormatting = [.prettyPrinted, .sortedKeys]
+            encoder.dateEncodingStrategy = .iso8601
+            let data = try encoder.encode(config)
+
+            // Atomic write: tulis ke temp dulu, lalu rename
+            let url = URL(fileURLWithPath: configPath)
+            try data.write(to: url, options: .atomic)
+
+            NSLog("[PersistentConfig] ✅ Saved: limit=%d%%, enabled=%@",
+                  limit, enabled ? "true" : "false")
+        } catch {
+            NSLog("[PersistentConfig] ❌ Gagal save: %@", error.localizedDescription)
+        }
+    }
+
+    /// Baca config dari disk. Return nil jika file tidak ada atau corrupt.
+    static func load() -> PersistentChargeLimitConfig? {
+        let url = URL(fileURLWithPath: configPath)
+        guard FileManager.default.fileExists(atPath: configPath) else {
+            NSLog("[PersistentConfig] File tidak ditemukan, skip restore")
+            return nil
+        }
+
+        do {
+            let data = try Data(contentsOf: url)
+            let decoder = JSONDecoder()
+            decoder.dateDecodingStrategy = .iso8601
+            let config = try decoder.decode(PersistentChargeLimitConfig.self, from: data)
+            NSLog("[PersistentConfig] ✅ Loaded: limit=%d%%, enabled=%@, timestamp=%@",
+                  config.limit, config.enabled ? "true" : "false",
+                  ISO8601DateFormatter().string(from: config.timestamp))
+            return config
+        } catch {
+            NSLog("[PersistentConfig] ⚠️ Gagal load (corrupt?): %@", error.localizedDescription)
+            return nil
+        }
+    }
+}
 
 // MARK: - Helper Tool
 
 final class HelperTool: NSObject, BatteryGuardXPCProtocol {
 
-    static let version = "1.0.0"
+    static let version = "1.1.0"
 
-    /// Satu instance ChargeMonitor per daemon — berjalan selama launchd daemon aktif
-    private let monitor = ChargeMonitor()
+    /// Shared ChargeMonitor — satu instance per daemon, digunakan bersama antara
+    /// auto-restore (saat boot) dan XPC commands (dari Main App).
+    /// Static agar `main.swift` bisa akses untuk auto-restore tanpa XPC.
+    static let sharedMonitor = ChargeMonitor()
+
     private var isMonitoring = false
     private var currentLimit = 100
+
+    // MARK: - Init
+
+    override init() {
+        super.init()
+        // Sinkronkan state lokal dengan shared monitor jika sudah berjalan
+        // (misalnya dari auto-restore di main.swift)
+        if Self.sharedMonitor.isCurrentlyMonitoring {
+            isMonitoring = true
+            currentLimit = Self.sharedMonitor.currentActiveLimit
+        }
+    }
 
     // MARK: - applyChargeLimit
 
@@ -41,9 +139,11 @@ final class HelperTool: NSObject, BatteryGuardXPCProtocol {
         if limit == 100 {
             // 100% = tidak ada limit — hentikan monitoring dan izinkan charging penuh
             if isMonitoring {
-                monitor.stopMonitoring()
+                Self.sharedMonitor.stopMonitoring()
                 isMonitoring = false
             }
+            // Persist: disabled
+            PersistentConfigStore.save(limit: 100, enabled: false)
             NSLog("[HelperTool] Limit = 100%%, charge limit dinonaktifkan")
             reply(true, nil)
             return
@@ -51,12 +151,15 @@ final class HelperTool: NSObject, BatteryGuardXPCProtocol {
 
         if isMonitoring {
             // Monitoring sudah jalan — cukup update limitnya saja
-            monitor.updateLimit(limit)
+            Self.sharedMonitor.updateLimit(limit)
         } else {
             // Mulai monitoring fresh
-            monitor.startMonitoring(limit: limit)
+            Self.sharedMonitor.startMonitoring(limit: limit)
             isMonitoring = true
         }
+
+        // Persist: simpan limit baru ke disk agar survive reboot
+        PersistentConfigStore.save(limit: limit, enabled: true)
 
         NSLog("[HelperTool] ✅ Monitoring aktif, limit: %d%%", limit)
         reply(true, nil)
@@ -67,9 +170,13 @@ final class HelperTool: NSObject, BatteryGuardXPCProtocol {
     /// Nonaktifkan charge limit — baterai boleh isi hingga 100%
     func disableChargeLimit(reply: @escaping (Bool, String?) -> Void) {
         NSLog("[HelperTool] disableChargeLimit dipanggil")
-        monitor.stopMonitoring()
+        Self.sharedMonitor.stopMonitoring()
         isMonitoring = false
         currentLimit = 100
+
+        // Persist: tandai sebagai disabled
+        PersistentConfigStore.save(limit: 100, enabled: false)
+
         reply(true, nil)
     }
 

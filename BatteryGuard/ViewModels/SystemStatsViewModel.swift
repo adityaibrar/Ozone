@@ -132,6 +132,11 @@ final class SystemStatsViewModel: ObservableObject {
         tempMonitor.startMonitoring()
 
         chargeLimitManager.verifyHelperConnection()
+
+        // Re-apply charge limit ke helper saat app launch (Layer 2 backup).
+        // Helper sudah bisa auto-restore dari persistent config (Layer 1),
+        // tapi ini memastikan sinkronisasi UI ↔ helper tetap konsisten.
+        chargeLimitManager.restoreOnLaunch()
     }
 
     func stopAll() {
