@@ -113,7 +113,12 @@ final class MouseScrollService: ObservableObject {
     @Published private(set) var lastEventDate: Date? = nil
 
     /// Jumlah total event mouse yang telah dibalik (statistik sesi)
+    /// Diupdate secara atomik dari CGEventTap thread, di-publish ke main thread
+    /// via timer batching — bukan per-event untuk mengurangi context switch
     @Published private(set) var invertedEventCount: Int = 0
+    /// Backing atomic counter — nama berbeda dari @Published agar tidak konflik
+    /// dengan synthesized property _invertedEventCount milik properti wrapper.
+    private var _atomicInvertCount: Int64 = 0
 
     // MARK: - Private State
 
@@ -126,16 +131,43 @@ final class MouseScrollService: ObservableObject {
     private var lastGesturePhaseTimestamp: UInt64?
 
     private var permissionTimer: Timer?
+    /// Timer untuk publish invertedEventCount dari background ke main thread (1 detik sekali)
+    /// Menggantikan per-event DispatchQueue.main.async di hot path CGEventTap
+    private var statsFlushTimer: DispatchSourceTimer?
     private var cancellables = Set<AnyCancellable>()
 
     private init() {
         refreshPermissionStatus()
         setupPermissionWatcher()
+        setupStatsFlushTimer()
     }
 
     deinit {
         permissionTimer?.invalidate()
+        statsFlushTimer?.cancel()
         stop()
+    }
+
+    // MARK: - Stats Flush Timer
+
+    /// Publish invertedEventCount dari atomic counter ke @Published var, 1x/detik.
+    /// Ini jauh lebih efisien daripada dispatch-per-event dari hot path CGEventTap.
+    private func setupStatsFlushTimer() {
+        let queue = DispatchQueue(label: "com.batteryguard.scroll-stats", qos: .utility)
+        let timer = DispatchSource.makeTimerSource(queue: queue)
+        timer.schedule(deadline: .now() + 1.0, repeating: 1.0, leeway: .milliseconds(100))
+        timer.setEventHandler { [weak self] in
+            guard let self = self else { return }
+            // Baca nilai atomik — OSAtomicAdd64 dengan 0 berfungsi sebagai atomic read
+            let current = withUnsafeMutablePointer(to: &self._atomicInvertCount) {
+                Int(OSAtomicAdd64(0, $0))
+            }
+            DispatchQueue.main.async {
+                self.invertedEventCount = current
+            }
+        }
+        timer.resume()
+        statsFlushTimer = timer
     }
 
     // MARK: - Permission Watcher Setup
@@ -169,9 +201,13 @@ final class MouseScrollService: ObservableObject {
             }
             .store(in: &cancellables)
 
-        // 3. Periodic watcher ringan tiap 1.5 detik jika permission belum aktif atau tap belum jalan
+        // 3. Periodic watcher — interval 15 detik (bukan 1.5) karena:
+        //    - AXIsProcessTrusted() adalah IPC call ke securityd
+        //    - didBecomeActiveNotification sudah menangani case utama (user balik dari System Settings)
+        //    - Timer ini hanya fallback edge case (permission berubah tanpa app ke foreground)
+        //    - Saat sudah aktif → timer di-invalidate, tidak perlu polling lagi
         permissionTimer?.invalidate()
-        permissionTimer = Timer.scheduledTimer(withTimeInterval: 1.5, repeats: true) { [weak self] _ in
+        permissionTimer = Timer.scheduledTimer(withTimeInterval: 15.0, repeats: true) { [weak self] timer in
             guard let self = self else { return }
             let trusted = AXIsProcessTrusted()
             if self.hasAccessibilityPermission != trusted {
@@ -179,6 +215,11 @@ final class MouseScrollService: ObservableObject {
             }
             if self.hasAccessibilityPermission && self.prefs.mouseAutoScrollEnabled && !self.isActive {
                 self.start()
+            }
+            // Sudah granted dan aktif → tidak perlu polling lagi
+            if trusted && self.isActive {
+                timer.invalidate()
+                self.permissionTimer = nil
             }
         }
     }
@@ -335,24 +376,31 @@ final class MouseScrollService: ObservableObject {
         if type == .tapDisabledByTimeout || type == .tapDisabledByUserInput {
             if let tap = eventTap {
                 CGEvent.tapEnable(tap: tap, enable: true)
+                #if DEBUG
                 print("[MouseScrollService] 🔄 CGEventTap di-rearm otomatis.")
+                #endif
             }
             return Unmanaged.passUnretained(event)
         }
 
         guard type == .scrollWheel else {
+            #if DEBUG
             print("[MouseScrollService] 📩 Received non-scroll type: \(type.rawValue)")
+            #endif
             return Unmanaged.passUnretained(event)
         }
 
-        // === DEBUG DIAGNOSTIK ===
+        // CATATAN: Debug diagnostik dijalankan hanya di DEBUG build.
+        // CGEventTap dipanggil ratusan kali/detik saat scroll — print() di sini
+        // sangat mahal (string alloc + I/O) dan menjadi penyebab utama CPU spike.
+        #if DEBUG
         let srcPID = event.getIntegerValueField(.eventSourceUnixProcessID)
         let srcUD  = event.getIntegerValueField(.eventSourceUserData)
         let isCont = event.getIntegerValueField(.scrollWheelEventIsContinuous)
         let d1     = event.getIntegerValueField(.scrollWheelEventDeltaAxis1)
         let p1     = event.getIntegerValueField(.scrollWheelEventPointDeltaAxis1)
         print("[MouseScrollService] 📜 scrollWheel │ srcPID=\(srcPID) ud=\(srcUD) ownPID=\(Self.ownProcessID) isCont=\(isCont) Δline=\(d1) Δpoint=\(p1)")
-        // === END DEBUG ===
+        #endif
 
         // Abaikan scroll event sintetis yang diproduksi oleh proses ini sendiri
         guard event.getIntegerValueField(.eventSourceUserData) != ScrollWheelSupport.syntheticTag,
@@ -386,7 +434,9 @@ final class MouseScrollService: ObservableObject {
             secondsSinceLastGesturePhase: secondsSinceGesturePhase
         )
 
+        #if DEBUG
         print("[MouseScrollService] 🔍 isContinuous=\(traits.isContinuous) hasPrecise=\(traits.hasPreciseDeltas) scrollPhase=\(traits.scrollPhase) momentumPhase=\(traits.momentumPhase) → isMouse=\(isMouse)")
+        #endif
 
         // Update tracking untuk visualizer di Dashboard / Menu Bar
         let detectedDevice: ScrollInputDevice = isMouse ? .mouse : .trackpad
@@ -399,7 +449,10 @@ final class MouseScrollService: ObservableObject {
 
         // Jika event berasal dari mouse fisik, balikkan arah scroll sesuai konfigurasi
         if isMouse {
+            #if DEBUG
             print("[MouseScrollService] 🖱️ MOUSE event — akan dibalik. invertV=\(prefs.mouseInvertVertical) invertH=\(prefs.mouseInvertHorizontal)")
+            #endif
+
             // PENTING: Semua delta (line, point, fixedPoint) WAJIB dibaca SEBELUM penulisan apapun!
             // Menulis line delta memicu WindowServer menghitung ulang nilai point & fixedPoint.
             let invertVertical = prefs.mouseInvertVertical
@@ -435,9 +488,10 @@ final class MouseScrollService: ObservableObject {
                 event.setDoubleValueField(.scrollWheelEventFixedPtDeltaAxis2, value: -fixedPointX)
             }
 
-            DispatchQueue.main.async {
-                self.invertedEventCount += 1
-            }
+            // Increment counter secara atomik di background thread.
+            // TIDAK dispatch ke main untuk setiap event — terlalu mahal di hot path.
+            // Nilai di-publish ke @Published var dari setupStatsFlushTimer() (1 detik sekali).
+            withUnsafeMutablePointer(to: &_atomicInvertCount) { OSAtomicIncrement64($0) }
         }
 
         return Unmanaged.passUnretained(event)
