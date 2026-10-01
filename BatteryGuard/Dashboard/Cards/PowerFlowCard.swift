@@ -95,27 +95,32 @@ struct PowerFlowNode: View {
     var isActive: Bool = true
 
     var body: some View {
-        VStack(spacing: 4) {
+        VStack(spacing: 6) {
             ZStack {
+                // Outer glow ring saat aktif
                 Circle()
-                    .fill(color.opacity(0.12))
-                    .frame(width: 44, height: 44)
+                    .fill(color.opacity(isActive ? 0.08 : 0))
+                    .frame(width: 56, height: 56)
+
+                Circle()
+                    .fill(color.opacity(0.16))
+                    .frame(width: 46, height: 46)
 
                 Image(systemName: icon)
-                    .font(.system(size: 18, weight: .medium))
+                    .font(.system(size: 18, weight: .semibold))
                     .foregroundStyle(isActive ? color : .secondary)
             }
 
             Text(label)
-                .font(.system(size: 10, weight: .semibold))
+                .font(.system(size: 10, weight: .bold, design: .rounded))
                 .foregroundStyle(isActive ? .primary : .secondary)
 
             Text(sublabel)
                 .font(.system(size: 9, design: .monospaced))
-                .foregroundStyle(.secondary)
+                .foregroundStyle(isActive ? color.opacity(0.8) : .secondary)
         }
         .frame(maxWidth: .infinity)
-        .opacity(isActive ? 1.0 : 0.5)
+        .opacity(isActive ? 1.0 : 0.45)
     }
 }
 
@@ -131,17 +136,21 @@ struct FlowArrow: View {
     @State private var animating = false
 
     var body: some View {
-        Image(systemName: direction == .right ? "chevron.right" : "chevron.left")
-            .font(.system(size: 12, weight: .bold))
-            .foregroundStyle(isActive ? color : .secondary.opacity(0.3))
-            .scaleEffect(animating && isActive ? 1.1 : 1.0)
-            .animation(
-                isActive
-                    ? .easeInOut(duration: 0.8).repeatForever(autoreverses: true)
-                    : .default,
-                value: animating
-            )
-            .onAppear { animating = true }
-            .frame(width: 20)
+        HStack(spacing: 2) {
+            ForEach(0..<3, id: \.self) { index in
+                Image(systemName: "chevron.right")
+                    .font(.system(size: 10, weight: .bold))
+                    .foregroundStyle(isActive ? color : .secondary.opacity(0.2))
+                    .opacity(isActive ? (animating ? Double(index + 1) / 3.0 : Double(3 - index) / 3.0) : 0.3)
+                    .animation(
+                        isActive
+                            ? .easeInOut(duration: 0.9).repeatForever(autoreverses: false).delay(Double(index) * 0.25)
+                            : .default,
+                        value: animating
+                    )
+            }
+        }
+        .onAppear { animating = true }
+        .frame(width: 24)
     }
 }

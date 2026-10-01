@@ -50,7 +50,7 @@ struct SettingsView: View {
                 }
         }
         .padding(20)
-        .frame(width: 580, height: 460)
+        .frame(width: 600, height: 500)
         .environmentObject(prefs)
         .environmentObject(helperInstaller)
     }
@@ -345,33 +345,81 @@ private struct HelperSettingsTab: View {
 // MARK: - About Tab
 
 private struct AboutTab: View {
+
+    // Baca versi & build dari Bundle — otomatis sinkron dengan Info.plist
+    private var appVersion: String {
+        Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "—"
+    }
+    private var buildNumber: String {
+        Bundle.main.infoDictionary?["CFBundleVersion"] as? String ?? "—"
+    }
+    private var appName: String {
+        Bundle.main.infoDictionary?["CFBundleDisplayName"] as? String
+            ?? Bundle.main.infoDictionary?["CFBundleName"] as? String
+            ?? "Ozone"
+    }
+
     var body: some View {
-        VStack(spacing: 16) {
+        VStack(spacing: 20) {
             Spacer()
 
-            Image(systemName: "battery.75.bolt")
-                .font(.system(size: 52))
-                .foregroundStyle(.green)
+            // App icon asli dari bundle — selalu sinkron dengan Assets.xcassets
+            ZStack {
+                // Glow ambient
+                Circle()
+                    .fill(
+                        RadialGradient(
+                            colors: [.green.opacity(0.2), .green.opacity(0)],
+                            center: .center,
+                            startRadius: 30,
+                            endRadius: 70
+                        )
+                    )
+                    .frame(width: 130, height: 130)
 
-            VStack(spacing: 4) {
-                Text("Ozone")
-                    .font(.title2)
+                // Icon asli app
+                Image(nsImage: NSApp.applicationIconImage)
+                    .resizable()
+                    .interpolation(.high)
+                    .antialiased(true)
+                    .frame(width: 80, height: 80)
+                    .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
+                    .shadow(color: .black.opacity(0.25), radius: 12, x: 0, y: 6)
+            }
+
+            VStack(spacing: 6) {
+                Text(appName)
+                    .font(.system(.title, design: .rounded))
                     .fontWeight(.bold)
 
-                Text("Version 1.0.0")
-                    .font(.subheadline)
-                    .foregroundStyle(.secondary)
+                // Versi dinamis dari Bundle
+                HStack(spacing: 6) {
+                    Text("Version \(appVersion)")
+                        .font(.system(.subheadline, design: .monospaced))
+                        .foregroundStyle(.secondary)
+
+                    Text("(\(buildNumber))")
+                        .font(.system(.caption, design: .monospaced))
+                        .foregroundStyle(.tertiary)
+                }
 
                 Text("System Monitor, Battery & Keyboard Utility\nfor Apple Silicon Macs")
-                    .font(.caption)
+                    .font(.callout)
                     .foregroundStyle(.secondary)
                     .multilineTextAlignment(.center)
             }
 
-            HStack(spacing: 16) {
-                Text("Built with SwiftUI + IOKit")
-                    .font(.caption2)
-                    .foregroundStyle(.tertiary)
+            // Tech badges
+            HStack(spacing: 8) {
+                ForEach(["SwiftUI", "IOKit", "XPC", "Swift Charts"], id: \.self) { badge in
+                    Text(badge)
+                        .font(.system(size: 11, weight: .medium, design: .rounded))
+                        .foregroundStyle(.secondary)
+                        .padding(.horizontal, 9)
+                        .padding(.vertical, 4)
+                        .background(.secondary.opacity(0.1))
+                        .clipShape(Capsule())
+                }
             }
 
             Spacer()

@@ -1,6 +1,6 @@
 // MenuBarView.swift
-// BatteryGuard — Konten popover MenuBarExtra
-// Tampil saat user klik icon di status bar
+// BatteryGuard — Konten popover MenuBarExtra (macOS 26 Tahoe refresh)
+// Redesign: lebih informatif — health, cycle, suhu, CPU/RAM inline
 
 import SwiftUI
 
@@ -12,123 +12,79 @@ struct MenuBarView: View {
     @EnvironmentObject var prefs: PreferencesStore
     @EnvironmentObject var helperInstaller: HelperInstaller
     @ObservedObject private var mouseService = MouseScrollService.shared
-    @Environment(\.openWindow) private var openWindow
 
-    /// Nilai sementara slider — bebas per-1%, XPC hanya dipanggil saat drag selesai (onEditingChanged)
     @State private var tempLimit: Double = 80
 
     var body: some View {
         VStack(spacing: 0) {
-            // MARK: Header — Metrics Strip
-            metricsStrip
-                .padding(.horizontal, 16)
-                .padding(.top, 12)
-                .padding(.bottom, 8)
 
-            Divider()
+            // MARK: ── Battery Hero ─────────────────────────
+            batteryHeroSection
+                .padding(.horizontal, 14)
+                .padding(.top, 14)
+                .padding(.bottom, 12)
 
-            // MARK: Battery Status
-            batterySection
-                .padding(.horizontal, 16)
-                .padding(.vertical, 12)
+            Divider().opacity(0.4)
 
-            Divider()
-
-            // MARK: Charge Control
-            chargeControlSection
-                .padding(.horizontal, 16)
-                .padding(.vertical, 12)
-
-            Divider()
-
-            // MARK: Mouse Scroll Guard
-            mouseScrollSection
-                .padding(.horizontal, 16)
+            // MARK: ── Quick Stats Row ──────────────────────
+            quickStatsRow
+                .padding(.horizontal, 14)
                 .padding(.vertical, 10)
 
-            // MARK: Helper Status (jika ada error)
+            Divider().opacity(0.4)
+
+            // MARK: ── Charge Limit ─────────────────────────
+            chargeControlSection
+                .padding(.horizontal, 14)
+                .padding(.vertical, 10)
+
+            Divider().opacity(0.4)
+
+            // MARK: ── Mouse Scroll ────────────────────────
+            mouseScrollSection
+                .padding(.horizontal, 14)
+                .padding(.vertical, 9)
+
+            // MARK: ── Error banner ────────────────────────
             if let error = viewModel.chargeLimitError {
-                Divider()
+                Divider().opacity(0.4)
                 helperErrorBanner(error)
-                    .padding(.horizontal, 16)
+                    .padding(.horizontal, 14)
                     .padding(.vertical, 8)
             }
 
-            Divider()
+            Divider().opacity(0.4)
 
-            // MARK: Footer Actions
+            // MARK: ── Footer ──────────────────────────────
             footerActions
                 .padding(.horizontal, 12)
                 .padding(.vertical, 8)
         }
-        .frame(width: 300)
-        .background(.regularMaterial)
+        .frame(width: 310)
+        .background(.ultraThinMaterial)
         .onAppear {
-            // Sync tempLimit saat popover dibuka
             tempLimit = Double(viewModel.chargeLimitState.limitPercent)
         }
         .onChange(of: viewModel.chargeLimitState.limitPercent) { newVal in
-            // Sync jika limit berubah dari luar (misal Settings)
             tempLimit = Double(newVal)
-        }
-    } // end body
-
-    // MARK: - Metrics Strip
-
-    private var metricsStrip: some View {
-        HStack(spacing: 8) {
-            // Battery %
-            StatusBarMetricView(
-                icon: viewModel.batteryIconName,
-                value: "\(viewModel.batteryStatus.percentage)",
-                unit: "%",
-                color: batteryColor
-            )
-
-            if prefs.showNetworkSpeed {
-                Divider().frame(height: 16)
-                NetworkSpeedMetricView(
-                    downloadFormatted: viewModel.networkStats.downloadFormatted,
-                    uploadFormatted: viewModel.networkStats.uploadFormatted,
-                    isCompact: prefs.isCompactMenuBar
-                )
-            }
-
-            if prefs.showTemperature && viewModel.temperatures.cpuTemperature != nil {
-                Divider().frame(height: 16)
-                StatusBarMetricView(
-                    icon: "thermometer.medium",
-                    value: viewModel.temperatures.cpuTempFormatted,
-                    unit: "",
-                    color: tempColor
-                )
-            }
-
-            if prefs.showRAMUsage {
-                Divider().frame(height: 16)
-                StatusBarMetricView(
-                    icon: "memorychip",
-                    value: String(format: "%.0f%%", viewModel.ramStats.usagePercent),
-                    unit: "",
-                    color: ramColor
-                )
-            }
-
-            Spacer()
         }
     }
 
-    // MARK: - Battery Section
+    // MARK: - Battery Hero Section
 
-    private var batterySection: some View {
-        VStack(alignment: .leading, spacing: 6) {
-            // Status row
-            HStack {
-                VStack(alignment: .leading, spacing: 2) {
-                    Text("Battery")
-                        .font(.headline)
-                        .fontWeight(.semibold)
-
+    private var batteryHeroSection: some View {
+        VStack(spacing: 10) {
+            // Top row: label + big %
+            HStack(alignment: .top) {
+                VStack(alignment: .leading, spacing: 3) {
+                    HStack(spacing: 5) {
+                        Image(systemName: viewModel.batteryIconName)
+                            .font(.system(size: 13, weight: .semibold))
+                            .foregroundStyle(batteryColor)
+                        Text("Battery")
+                            .font(.system(.headline, design: .rounded))
+                            .fontWeight(.bold)
+                    }
                     Text(batteryStatusText)
                         .font(.caption)
                         .foregroundStyle(.secondary)
@@ -136,53 +92,127 @@ struct MenuBarView: View {
 
                 Spacer()
 
-                // Large percentage display
                 Text("\(viewModel.batteryStatus.percentage)%")
-                    .font(.system(size: 28, weight: .bold, design: .rounded))
+                    .font(.system(size: 32, weight: .bold, design: .rounded))
                     .foregroundStyle(batteryColor)
+                    .contentTransition(.numericText())
+                    .animation(.spring(response: 0.4), value: viewModel.batteryStatus.percentage)
             }
 
-            // Battery level bar
+            // Progress bar
             BatteryProgressBar(
                 percentage: viewModel.batteryStatus.percentage,
-                limit: viewModel.chargeLimitState.isEnabled ? viewModel.chargeLimitState.limitPercent : nil,
+                limit: viewModel.chargeLimitState.isEnabled
+                    ? viewModel.chargeLimitState.limitPercent : nil,
                 isCharging: viewModel.batteryStatus.isCharging
             )
-            .frame(height: 8)
+            .frame(height: 7)
 
-            // Time remaining
-            if let mins = viewModel.powerFlow.timeRemainingMinutes, mins > 0 {
-                HStack {
+            // Bottom row: time + wattage
+            HStack(spacing: 4) {
+                if let mins = viewModel.powerFlow.timeRemainingMinutes, mins > 0 {
                     Image(systemName: viewModel.batteryStatus.isCharging ? "bolt.fill" : "clock")
-                        .font(.caption2)
-                        .foregroundStyle(.secondary)
+                        .font(.system(size: 10, weight: .medium))
+                        .foregroundStyle(batteryColor.opacity(0.8))
                     Text(viewModel.timeRemainingLabel)
                         .font(.caption)
                         .foregroundStyle(.secondary)
-                    Spacer()
+                }
 
-                    // Power draw
-                    if let watt = viewModel.powerFlow.instantWattage {
-                        Text(String(format: "%.1f W", watt))
-                            .font(.caption)
-                            .foregroundStyle(.secondary)
-                    }
+                Spacer()
+
+                if let watt = viewModel.powerFlow.instantWattage {
+                    Text(String(format: "%.1f W", watt))
+                        .font(.system(.caption, design: .monospaced))
+                        .foregroundStyle(.secondary)
                 }
             }
         }
     }
 
+    // MARK: - Quick Stats Row (Health · Cycles · Temp · RAM)
+
+    private var quickStatsRow: some View {
+        HStack(spacing: 0) {
+            // Health
+            QuickStatCell(
+                icon: "heart.fill",
+                label: "Health",
+                value: viewModel.batteryHealth.maxCapacityPercent.map { "\($0)%" } ?? "—",
+                color: healthColor
+            )
+
+            verticalSeparator
+
+            // Cycle Count
+            QuickStatCell(
+                icon: "arrow.2.circlepath",
+                label: "Cycles",
+                value: viewModel.batteryHealth.cycleCount.map { "\($0)" } ?? "—",
+                color: cycleColor
+            )
+
+            verticalSeparator
+
+            // CPU Temp (atau RAM jika tidak ada temp)
+            if let _ = viewModel.temperatures.cpuTemperature {
+                QuickStatCell(
+                    icon: "thermometer.medium",
+                    label: "CPU Temp",
+                    value: viewModel.temperatures.cpuTempFormatted,
+                    color: tempColor
+                )
+            } else {
+                QuickStatCell(
+                    icon: "memorychip",
+                    label: "RAM",
+                    value: String(format: "%.0f%%", viewModel.ramStats.usagePercent),
+                    color: ramColor
+                )
+            }
+
+            verticalSeparator
+
+            // Network down speed
+            QuickStatCell(
+                icon: "arrow.down",
+                label: "Download",
+                value: viewModel.networkStats.downloadFormatted,
+                color: .cyan
+            )
+        }
+        .frame(maxWidth: .infinity)
+    }
+
+    private var verticalSeparator: some View {
+        Divider()
+            .frame(height: 28)
+            .opacity(0.4)
+    }
+
     // MARK: - Charge Control Section
 
     private var chargeControlSection: some View {
-        VStack(alignment: .leading, spacing: 10) {
-            // Header dengan toggle
+        VStack(alignment: .leading, spacing: 8) {
             HStack {
-                Label("Charge Limit", systemImage: "bolt.badge.clock")
-                    .font(.subheadline)
-                    .fontWeight(.medium)
+                HStack(spacing: 5) {
+                    Image(systemName: "bolt.badge.clock.fill")
+                        .font(.system(size: 11, weight: .semibold))
+                        .foregroundStyle(.green)
+                    Text("Charge Limit")
+                        .font(.system(.subheadline, design: .rounded))
+                        .fontWeight(.semibold)
+                }
 
                 Spacer()
+
+                if viewModel.chargeLimitState.isEnabled {
+                    Text("\(viewModel.chargeLimitState.limitPercent)%")
+                        .font(.system(.caption, design: .monospaced))
+                        .fontWeight(.bold)
+                        .foregroundStyle(.green)
+                        .contentTransition(.numericText())
+                }
 
                 Toggle("", isOn: Binding(
                     get: { viewModel.chargeLimitState.isEnabled },
@@ -190,77 +220,53 @@ struct MenuBarView: View {
                 ))
                 .toggleStyle(.switch)
                 .controlSize(.small)
+                .tint(.green)
             }
 
-            // Slider
             if viewModel.chargeLimitState.isEnabled {
-                VStack(spacing: 6) {
-                    HStack {
-                        Text("Limit")
-                            .font(.caption)
-                            .foregroundStyle(.secondary)
-                        Spacer()
-                        Text("\(Int(tempLimit))%")
-                            .font(.system(.caption, design: .monospaced))
-                            .fontWeight(.semibold)
-                            .foregroundStyle(viewModel.chargeLimitState.isEnabled ? .primary : .secondary)
-                            .contentTransition(.numericText())
-                    }
+                Slider(value: $tempLimit, in: 20...100) { _ in
+                    viewModel.setChargeLimit(Int(tempLimit))
+                }
+                .tint(sliderColor)
 
-                    Slider(
-                        value: $tempLimit,
-                        in: 20...100
-                    ) { _ in
-                        viewModel.setChargeLimit(Int(tempLimit))
-                    }
-                    .disabled(!viewModel.chargeLimitState.isEnabled)
-                    .tint(sliderColor)
-
-                    // Range hint
-                    HStack {
-                        Text("20%")
-                            .font(.system(size: 9))
-                            .foregroundStyle(.tertiary)
-                        Spacer()
-                        Text("Recommended: 80%")
-                            .font(.system(size: 9))
-                            .foregroundStyle(.tertiary)
-                        Spacer()
-                        Text("100%")
-                            .font(.system(size: 9))
-                            .foregroundStyle(.tertiary)
-                    }
+                HStack {
+                    Text("20%").font(.system(size: 9)).foregroundStyle(.tertiary)
+                    Spacer()
+                    Text("Recommended: 80%").font(.system(size: 9)).foregroundStyle(.tertiary)
+                    Spacer()
+                    Text("100%").font(.system(size: 9)).foregroundStyle(.tertiary)
                 }
             }
 
-            // Applying indicator
             if viewModel.isApplyingLimit {
-                HStack(spacing: 6) {
-                    ProgressView().controlSize(.small)
+                HStack(spacing: 5) {
+                    ProgressView().controlSize(.small).tint(.green)
                     Text("Applying...").font(.caption).foregroundStyle(.secondary)
                 }
             }
         }
     }
 
-    // MARK: - Mouse Scroll Guard Section
+    // MARK: - Mouse Scroll Section
 
     private var mouseScrollSection: some View {
-        HStack {
-            VStack(alignment: .leading, spacing: 2) {
-                HStack(spacing: 6) {
-                    Image(systemName: "computermouse")
-                        .font(.caption)
-                        .foregroundStyle(mouseService.isActive ? .indigo : .secondary)
+        HStack(spacing: 10) {
+            Circle()
+                .fill(mouseService.isActive ? Color.indigo : Color.secondary.opacity(0.3))
+                .frame(width: 6, height: 6)
 
+            VStack(alignment: .leading, spacing: 1) {
+                HStack(spacing: 4) {
+                    Image(systemName: "computermouse.fill")
+                        .font(.system(size: 10))
+                        .foregroundStyle(mouseService.isActive ? Color.indigo : Color.secondary)
                     Text("Mouse Scroll")
-                        .font(.subheadline)
+                        .font(.system(.subheadline, design: .rounded))
                         .fontWeight(.medium)
                 }
-
                 Text(mouseStatusSubtitle)
                     .font(.caption2)
-                    .foregroundStyle(.secondary)
+                    .foregroundStyle(mouseService.hasAccessibilityPermission ? Color.secondary : Color.orange)
             }
 
             Spacer()
@@ -269,22 +275,20 @@ struct MenuBarView: View {
                 get: { prefs.mouseAutoScrollEnabled },
                 set: { enabled in
                     prefs.mouseAutoScrollEnabled = enabled
-                    if enabled {
-                        mouseService.start(userInitiated: true)
-                    } else {
-                        mouseService.stop()
-                    }
+                    if enabled { mouseService.start(userInitiated: true) }
+                    else { mouseService.stop() }
                 }
             ))
             .toggleStyle(.switch)
             .controlSize(.small)
+            .tint(.indigo)
         }
     }
 
     private var mouseStatusSubtitle: String {
         if !prefs.mouseAutoScrollEnabled { return "Disabled" }
-        if !mouseService.hasAccessibilityPermission { return "Needs Accessibility" }
-        return mouseService.isActive ? "Inverted · Trackpad natural" : "Inactive"
+        if !mouseService.hasAccessibilityPermission { return "⚠ Needs Accessibility permission" }
+        return mouseService.isActive ? "Active · Inverted scroll" : "Inactive"
     }
 
     // MARK: - Helper Error Banner
@@ -301,38 +305,68 @@ struct MenuBarView: View {
         }
         .padding(8)
         .background(.orange.opacity(0.1))
-        .clipShape(RoundedRectangle(cornerRadius: 6))
+        .clipShape(RoundedRectangle(cornerRadius: 8, style: .continuous))
+    }
+
+    /// Label icon ⚙ yang dipakai oleh SettingsLink (macOS 14+) dan fallback Button (macOS 13)
+    private var settingsIconLabel: some View {
+        Image(systemName: "gear")
+            .font(.system(size: 13, weight: .medium))
+            .foregroundStyle(.secondary)
+            .frame(width: 28, height: 28)
+            .background(.primary.opacity(0.05))
+            .clipShape(RoundedRectangle(cornerRadius: 7, style: .continuous))
     }
 
     // MARK: - Footer Actions
+    // Dashboard hanya icon kecil — tidak mencolok, mencegah klik tidak sengaja
 
     private var footerActions: some View {
-        HStack {
+        HStack(spacing: 6) {
+            // Settings — SettingsLink (macOS 14+) dengan fallback sendAction (macOS 13)
+            if #available(macOS 14.0, *) {
+                SettingsLink {
+                    settingsIconLabel
+                }
+                .buttonStyle(.plain)
+                .help("Settings")
+            } else {
+                Button {
+                    NSApp.sendAction(Selector(("showSettingsWindow:")), to: nil, from: nil)
+                } label: {
+                    settingsIconLabel
+                }
+                .buttonStyle(.plain)
+                .help("Settings")
+            }
+
+            // Dashboard — kirim notification ke AppDelegate, bukan openWindow scene
             Button {
-                openWindow(id: "dashboard")
-                NSApp.activate(ignoringOtherApps: true)
+                NotificationCenter.default.post(name: .openDashboardRequest, object: nil)
             } label: {
-                Label("Dashboard", systemImage: "gauge.with.dots.needle.bottom.50percent")
-                    .font(.caption)
+                Image(systemName: "rectangle.grid.2x2")
+                    .font(.system(size: 13, weight: .medium))
+                    .foregroundStyle(.secondary)
+                    .frame(width: 28, height: 28)
+                    .background(.primary.opacity(0.05))
+                    .clipShape(RoundedRectangle(cornerRadius: 7, style: .continuous))
             }
             .buttonStyle(.plain)
+            .help("Open Dashboard")
 
             Spacer()
 
-            Button {
-                NSApp.sendAction(Selector(("showSettingsWindow:")), to: nil, from: nil)
-            } label: {
-                Image(systemName: "gear")
-                    .font(.caption)
-            }
-            .buttonStyle(.plain)
+            // App name kecil di tengah
+            Text("Ozone")
+                .font(.system(size: 10, design: .rounded))
+                .foregroundStyle(.tertiary)
 
-            Button("Quit") {
-                NSApp.terminate(nil)
-            }
-            .buttonStyle(.plain)
-            .font(.caption)
-            .foregroundStyle(.secondary)
+            Spacer()
+
+            Button("Quit") { NSApp.terminate(nil) }
+                .buttonStyle(.plain)
+                .font(.system(size: 12))
+                .foregroundStyle(.secondary)
         }
     }
 
@@ -346,6 +380,24 @@ struct MenuBarView: View {
         case 20...: return .green
         case 10..<20: return .yellow
         default: return .red
+        }
+    }
+
+    private var healthColor: Color {
+        guard let h = viewModel.batteryHealth.maxCapacityPercent else { return .secondary }
+        switch h {
+        case 85...: return .green
+        case 70..<85: return .yellow
+        default: return .red
+        }
+    }
+
+    private var cycleColor: Color {
+        guard let c = viewModel.batteryHealth.cycleCount else { return .secondary }
+        switch c {
+        case ..<300: return .green
+        case 300..<700: return .yellow
+        default: return .orange
         }
     }
 
@@ -388,6 +440,35 @@ struct MenuBarView: View {
     }
 }
 
+// MARK: - Quick Stat Cell
+
+/// Satu kolom statistik di Quick Stats row
+private struct QuickStatCell: View {
+    let icon: String
+    let label: String
+    let value: String
+    let color: Color
+
+    var body: some View {
+        VStack(spacing: 3) {
+            Image(systemName: icon)
+                .font(.system(size: 11, weight: .semibold))
+                .foregroundStyle(color)
+
+            Text(value)
+                .font(.system(size: 12, weight: .bold, design: .monospaced))
+                .foregroundStyle(.primary)
+                .lineLimit(1)
+                .minimumScaleFactor(0.7)
+
+            Text(label)
+                .font(.system(size: 9, weight: .medium))
+                .foregroundStyle(.secondary)
+        }
+        .frame(maxWidth: .infinity)
+    }
+}
+
 // MARK: - Battery Progress Bar
 
 struct BatteryProgressBar: View {
@@ -398,34 +479,36 @@ struct BatteryProgressBar: View {
     var body: some View {
         GeometryReader { geo in
             ZStack(alignment: .leading) {
-                // Background
-                RoundedRectangle(cornerRadius: 4)
-                    .fill(Color.secondary.opacity(0.2))
-                    .frame(height: 8)
+                Capsule()
+                    .fill(Color.secondary.opacity(0.15))
+                    .frame(height: 7)
 
-                // Fill
-                RoundedRectangle(cornerRadius: 4)
-                    .fill(fillColor)
-                    .frame(width: geo.size.width * CGFloat(percentage) / 100, height: 8)
-                    .animation(.easeInOut(duration: 0.5), value: percentage)
+                Capsule()
+                    .fill(LinearGradient(
+                        colors: fillGradient,
+                        startPoint: .leading,
+                        endPoint: .trailing
+                    ))
+                    .frame(width: max(7, geo.size.width * CGFloat(percentage) / 100), height: 7)
+                    .animation(.spring(response: 0.5, dampingFraction: 0.75), value: percentage)
 
-                // Limit indicator
                 if let limit = limit {
-                    Rectangle()
+                    Capsule()
                         .fill(Color.orange)
-                        .frame(width: 2, height: 12)
-                        .offset(x: geo.size.width * CGFloat(limit) / 100 - 1, y: -2)
+                        .frame(width: 2.5, height: 11)
+                        .offset(x: geo.size.width * CGFloat(limit) / 100 - 1.25)
+                        .shadow(color: .orange.opacity(0.5), radius: 3)
                 }
             }
         }
     }
 
-    private var fillColor: Color {
-        if isCharging { return .green }
+    private var fillGradient: [Color] {
+        if isCharging { return [.green.opacity(0.8), .green] }
         switch percentage {
-        case 20...: return .green
-        case 10..<20: return .yellow
-        default: return .red
+        case 20...: return [.green.opacity(0.8), .green]
+        case 10..<20: return [.yellow.opacity(0.8), .yellow]
+        default: return [.red.opacity(0.8), .red]
         }
     }
 }
