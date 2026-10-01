@@ -88,6 +88,10 @@ final class SystemStatsViewModel: ObservableObject {
     let prefs: PreferencesStore
     let cycleHistory: CycleHistoryStore
 
+    // Volume mixer service harus hidup selama app berjalan (bukan per-view)
+    // agar Process Tap CoreAudio tetap aktif saat UI tidak visible.
+    let volumeMixer: VolumeMixerService
+
     // MARK: - Combine Cancellables
 
     private var cancellables = Set<AnyCancellable>()
@@ -114,6 +118,9 @@ final class SystemStatsViewModel: ObservableObject {
         self.chargeLimitManager = chargeLimitManager
         self.prefs = prefs
         self.cycleHistory = cycleHistory
+        // Inisialisasi di dalam body init (bukan default param) agar
+        // @MainActor isolation dari VolumeMixerService.init() terpenuhi.
+        self.volumeMixer = VolumeMixerService()
 
         setupBindings()
         startAll() // Start monitors automatically on app launch
