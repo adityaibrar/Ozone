@@ -5,9 +5,21 @@ import SwiftUI
 import AppKit
 
 // MARK: - VolumeMixerView
+// Wrapper tipis: ambil service dari ViewModel, teruskan ke inner view
+// yang punya @ObservedObject agar `$service` binding tersedia.
 
 struct VolumeMixerView: View {
-    @StateObject private var service = VolumeMixerService()
+    @EnvironmentObject private var viewModel: SystemStatsViewModel
+
+    var body: some View {
+        VolumeMixerContent(service: viewModel.volumeMixer)
+    }
+}
+
+// MARK: - VolumeMixerContent (inner — memiliki @ObservedObject untuk $ binding)
+
+private struct VolumeMixerContent: View {
+    @ObservedObject var service: VolumeMixerService
 
     var body: some View {
         ScrollView {

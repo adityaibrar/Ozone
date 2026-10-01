@@ -1,11 +1,13 @@
 // DashboardCardView.swift
-// BatteryGuard — Reusable card container untuk dashboard grid
+// BatteryGuard — Reusable card container (macOS 26 Tahoe refresh)
+// Desain: Fresh static surface — performa scroll diprioritaskan
 
 import SwiftUI
 
 // MARK: - DashboardCardView
 
-/// Container card yang konsisten untuk semua 10 card dashboard
+/// Container card yang konsisten untuk semua card dashboard.
+/// Performa: background static (no material per-card), satu shadow, tanpa hover state.
 struct DashboardCardView<Content: View>: View {
 
     let title: String
@@ -17,14 +19,20 @@ struct DashboardCardView<Content: View>: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
             // MARK: Card Header
-            HStack(spacing: 8) {
-                Image(systemName: icon)
-                    .font(.system(size: 14, weight: .semibold))
-                    .foregroundStyle(accentColor)
-                    .frame(width: 20)
+            HStack(spacing: 10) {
+                // Icon dengan background tinted pill
+                ZStack {
+                    RoundedRectangle(cornerRadius: 8, style: .continuous)
+                        .fill(accentColor.opacity(0.14))
+                        .frame(width: 30, height: 30)
+
+                    Image(systemName: icon)
+                        .font(.system(size: 13, weight: .semibold))
+                        .foregroundStyle(accentColor)
+                }
 
                 Text(title)
-                    .font(.system(size: 13, weight: .semibold))
+                    .font(.system(size: 13, weight: .semibold, design: .rounded))
                     .foregroundStyle(.primary)
 
                 Spacer()
@@ -32,27 +40,43 @@ struct DashboardCardView<Content: View>: View {
                 if isLoading {
                     ProgressView()
                         .controlSize(.small)
-                        .scaleEffect(0.8)
+                        .tint(accentColor)
                 }
             }
 
-            Divider()
+            // Accent divider — static, tanpa gradient berat
+            HStack(spacing: 0) {
+                Rectangle()
+                    .fill(accentColor.opacity(0.55))
+                    .frame(width: 40, height: 1)
+                Rectangle()
+                    .fill(accentColor.opacity(0.15))
+                    .frame(maxWidth: .infinity, maxHeight: 1)
+            }
 
             // MARK: Card Content
             content()
         }
         .padding(16)
-        .background(
-            RoundedRectangle(cornerRadius: 12)
-                .fill(.background)
-                .shadow(color: .black.opacity(0.06), radius: 6, x: 0, y: 2)
-        )
-        .overlay(
-            RoundedRectangle(cornerRadius: 12)
-                .strokeBorder(Color.secondary.opacity(0.12), lineWidth: 1)
-        )
+        // Background: warna adaptif environment (sangat ringan, tidak blur per-card)
+        .background(Color(nsColor: .windowBackgroundColor))
+        .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
+        .overlay(alignment: .leading) {
+            // Accent stripe kiri — di luar clipShape supaya tidak double-render
+            RoundedRectangle(cornerRadius: 14, style: .continuous)
+                .fill(accentColor.opacity(0.65))
+                .frame(width: 3)
+        }
+        .overlay {
+            // Border tipis static — bukan gradient dinamis
+            RoundedRectangle(cornerRadius: 14, style: .continuous)
+                .strokeBorder(Color.primary.opacity(0.07), lineWidth: 1)
+        }
+        // Satu shadow ringan — cukup untuk depth
+        .shadow(color: .black.opacity(0.08), radius: 6, x: 0, y: 2)
     }
 }
+
 
 // MARK: - Info Row
 
@@ -91,6 +115,6 @@ struct CardInfoRow: View {
             CardInfoRow(label: "Manufacturer", value: "Apple Inc.")
         }
     }
-    .frame(width: 300)
+    .frame(width: 320)
     .padding()
 }

@@ -18,7 +18,7 @@ struct PowerAdapterCard: View {
                         .frame(width: 8, height: 8)
                     Text(adapter.isConnected ? "Connected" : "Not Connected")
                         .font(.caption)
-                        .foregroundStyle(adapter.isConnected ? .green : .secondary)
+                        .foregroundStyle(adapter.isConnected ? Color.green : Color.secondary)
                     Spacer()
                 }
 
@@ -46,13 +46,19 @@ struct PowerAdapterCard: View {
                         }
                     }
                 } else {
-                    // Empty state
+                    // Empty state — "powerplug.slash" tidak tersedia, gunakan xmark.circle overlay
                     HStack {
                         Spacer()
                         VStack(spacing: 4) {
-                            Image(systemName: "powerplug.slash")
-                                .font(.title2)
-                                .foregroundStyle(.secondary)
+                            ZStack {
+                                Image(systemName: "powerplug")
+                                    .font(.title2)
+                                    .foregroundStyle(.secondary.opacity(0.5))
+                                Image(systemName: "xmark")
+                                    .font(.system(size: 10, weight: .bold))
+                                    .foregroundStyle(.secondary)
+                                    .offset(x: 8, y: -8)
+                            }
                             Text("No adapter connected")
                                 .font(.caption)
                                 .foregroundStyle(.secondary)

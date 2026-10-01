@@ -35,8 +35,8 @@ targets:
         NSPrincipalClass: NSApplication
         CFBundleDisplayName: Ozone
         CFBundleIdentifier: com.ibrardev.Ozone
-        CFBundleVersion: "1"
-        CFBundleShortVersionString: "1.0.0"
+        CFBundleVersion: "2"
+        CFBundleShortVersionString: "1.2.0"
         CFBundlePackageType: APPL
         LSMinimumSystemVersion: "13.0"
         NSHumanReadableCopyright: "Copyright © 2024 IbrarDev. Open Source."
@@ -61,8 +61,8 @@ targets:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: com.ibrardev.Ozone
         PRODUCT_NAME: Ozone
-        MARKETING_VERSION: "1.0.0"
-        CURRENT_PROJECT_VERSION: "1"
+        MARKETING_VERSION: "1.2.0"
+        CURRENT_PROJECT_VERSION: "2"
         INFOPLIST_FILE: BatteryGuard/Resources/Info.plist
         CODE_SIGN_ENTITLEMENTS: BatteryGuard/Resources/BatteryGuard.entitlements
         CODE_SIGN_STYLE: Automatic
@@ -171,8 +171,8 @@ targets:
       path: BatteryGuardHelper/Info.plist
       properties:
         CFBundleIdentifier: com.ibrardev.Ozone.Helper
-        CFBundleVersion: "1"
-        CFBundleShortVersionString: "1.0.0"
+        CFBundleVersion: "2"
+        CFBundleShortVersionString: "1.2.0"
         SMAuthorizedClients:
           - "identifier \"com.ibrardev.Ozone\""
         MachServices:
@@ -187,8 +187,8 @@ targets:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: com.ibrardev.Ozone.Helper
         PRODUCT_NAME: com.ibrardev.Ozone.Helper
-        MARKETING_VERSION: "1.0.0"
-        CURRENT_PROJECT_VERSION: "1"
+        MARKETING_VERSION: "1.2.0"
+        CURRENT_PROJECT_VERSION: "2"
         INFOPLIST_FILE: BatteryGuardHelper/Info.plist
         CREATE_INFOPLIST_SECTION_IN_BINARY: YES
         OTHER_LDFLAGS: ["-sectcreate", "__TEXT", "__info_plist", "$(SRCROOT)/BatteryGuardHelper/Info.plist"]

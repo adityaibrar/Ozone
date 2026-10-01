@@ -586,9 +586,10 @@ struct KeyboardMonitorView: View {
             : 1
 
         return VStack(alignment: .leading, spacing: 4) {
-            ForEach(keyboardRows.indices, id: \.self) { rowIndex in
+            // Gunakan enumerated() agar key duplikat (⇧, ⌘, ⌥) punya ID unik berdasarkan posisi
+            ForEach(Array(keyboardRows.enumerated()), id: \.offset) { rowIndex, row in
                 HStack(spacing: 4) {
-                    ForEach(keyboardRows[rowIndex], id: \.self) { keyLabel in
+                    ForEach(Array(row.enumerated()), id: \.offset) { colIndex, keyLabel in
                         heatmapKey(
                             label: keyLabel,
                             count: keyService.count(for: keyLabel),

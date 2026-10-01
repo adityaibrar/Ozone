@@ -30,30 +30,38 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     private var statusItem: NSStatusItem?
     private var popover: NSPopover?
 
+    // MARK: - Dashboard Window (NSWindowController)
+    // Dikontrol penuh di sini — tidak ada auto-show, tidak ada SwiftUI scene fight.
+    private var dashboardWindowController: NSWindowController?
+
     // MARK: - Lifecycle
 
     func applicationDidFinishLaunching(_ notification: Notification) {
+        // Nonaktifkan window restoration dari sesi sebelumnya
+        UserDefaults.standard.set(false, forKey: "NSQuitAlwaysKeepsWindows")
+
         helperInstaller.checkStatus()
         setupStatusItem()
         setupSystemNotifications()
-        // One-shot check: deteksi mouse & terapkan natural scroll setting
         mouseScroll.start()
-        // Start keyboard monitor jika aktif di preferences
         if prefs.keyboardMonitorEnabled {
             KeyboardMonitorService.shared.start()
         }
+
+        // Observe openDashboard dari MenuBarView
+        NotificationCenter.default.addObserver(
+            self,
+            selector: #selector(openDashboard),
+            name: .openDashboardRequest,
+            object: nil
+        )
     }
 
     func applicationWillTerminate(_ notification: Notification) {
-        // Hentikan event tap saat app quit
         mouseScroll.stop()
-        // Hentikan keyboard monitor & simpan data saat app quit
         KeyboardMonitorService.shared.stop()
-        // Helper daemon tetap berjalan setelah app quit (by design)
     }
 
-    /// Jangan quit saat semua window ditutup — ini menu bar app,
-    /// harus tetap hidup di background
     func applicationShouldTerminateAfterLastWindowClosed(_ sender: NSApplication) -> Bool {
         return false
     }
@@ -102,7 +110,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         let controller    = NSHostingController(rootView: content)
         let pop           = NSPopover()
         pop.contentViewController = controller
-        pop.contentSize   = NSSize(width: 300, height: 420)
+        pop.contentSize   = NSSize(width: 310, height: 460)
         pop.behavior      = .transient
         pop.animates      = true
         self.popover      = pop
@@ -155,15 +163,45 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
     // MARK: - Window Management
 
+    /// Buka dashboard — lazy init NSWindowController agar window dibuat on-demand,
+    /// bukan saat launch. Tidak ada SwiftUI scene yang bisa melawan ini.
     @objc func openDashboard() {
-        for window in NSApp.windows {
-            if window.identifier?.rawValue == "dashboard" {
-                window.makeKeyAndOrderFront(nil)
-                NSApp.activate(ignoringOtherApps: true)
-                return
-            }
+        if dashboardWindowController == nil {
+            makeDashboardWindowController()
         }
+        dashboardWindowController?.showWindow(nil)
+        NSApp.activate(ignoringOtherApps: true)
     }
+
+    /// Buat NSWindowController + NSHostingController untuk DashboardView.
+    /// Dipanggil hanya saat pertama kali user membuka dashboard.
+    private func makeDashboardWindowController() {
+        let rootView = DashboardView()
+            .environmentObject(viewModel)
+            .environmentObject(prefs)
+            .environmentObject(helperInstaller)
+
+        let hosting = NSHostingController(rootView: rootView)
+
+        let window = NSWindow(contentViewController: hosting)
+        window.title = "Ozone"
+        window.styleMask = [.titled, .closable, .miniaturizable, .resizable, .fullSizeContentView]
+        window.setContentSize(NSSize(width: 1100, height: 720))
+        window.minSize = NSSize(width: 900, height: 600)
+        window.center()
+        // PENTING: jangan release saat ditutup — kita ingin reuse window yang sama
+        window.isReleasedWhenClosed = false
+        window.titlebarAppearsTransparent = false
+
+        dashboardWindowController = NSWindowController(window: window)
+    }
+}
+
+// MARK: - Notification Names
+
+extension Notification.Name {
+    /// Dikirim dari MenuBarView (atau komponen lain) untuk membuka Dashboard.
+    static let openDashboardRequest = Notification.Name("com.ozone.openDashboardRequest")
 }
 
 // MARK: - MenuBarStatusLabel (SwiftUI)

@@ -1,5 +1,5 @@
 // SidebarView.swift
-// BatteryGuard — Navigasi sidebar kiri dashboard
+// BatteryGuard — Navigasi sidebar kiri dashboard (macOS 26 Tahoe refresh)
 
 import SwiftUI
 
@@ -20,13 +20,13 @@ enum DashboardSection: String, CaseIterable, Identifiable {
     var icon: String {
         switch self {
         case .dashboard:      return "gauge.with.dots.needle.bottom.50percent"
-        case .chargeControl:  return "bolt.badge.clock"
-        case .mouse:          return "computermouse"
+        case .chargeControl:  return "bolt.badge.clock.fill"
+        case .mouse:          return "computermouse.fill"
         case .energyUse:      return "bolt.fill"
         case .volumeMixer:    return "speaker.wave.3.fill"
-        case .keyboard:       return "keyboard"
-        case .log:            return "terminal"
-        case .uninstaller:    return "trash"
+        case .keyboard:       return "keyboard.fill"
+        case .log:            return "terminal.fill"
+        case .uninstaller:    return "trash.fill"
         }
     }
 
@@ -53,14 +53,23 @@ struct SidebarView: View {
         List(DashboardSection.allCases, selection: $selection) { section in
             Label {
                 Text(section.rawValue)
+                    .font(.system(.body, design: .rounded))
             } icon: {
-                Image(systemName: section.icon)
-                    .foregroundStyle(section.color)
+                // Ikon dengan background pill berwarna — macOS 26 style
+                ZStack {
+                    RoundedRectangle(cornerRadius: 6, style: .continuous)
+                        .fill(section.color.opacity(0.15))
+                        .frame(width: 26, height: 26)
+
+                    Image(systemName: section.icon)
+                        .font(.system(size: 12, weight: .semibold))
+                        .foregroundStyle(section.color)
+                }
             }
             .tag(section)
         }
         .listStyle(.sidebar)
         .navigationTitle("Ozone")
-        .frame(minWidth: 180)
+        .frame(minWidth: 190)
     }
 }

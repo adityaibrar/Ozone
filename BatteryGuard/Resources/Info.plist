@@ -17,33 +17,33 @@
 	<key>CFBundlePackageType</key>
 	<string>APPL</string>
 	<key>CFBundleShortVersionString</key>
-	<string>1.0.0</string>
+	<string>1.2.0</string>
 	<key>CFBundleVersion</key>
-	<string>1</string>
+	<string>2</string>
 	<key>LSMinimumSystemVersion</key>
 	<string>13.0</string>
 	<key>LSUIElement</key>
 	<true/>
+	<key>NSAccessibilityUsageDescription</key>
+	<string>Ozone requires Accessibility permission to separate mouse and trackpad scroll directions.</string>
+	<key>NSAudioCaptureUsageDescription</key>
+	<string>Ozone requires audio access to control per-application volume levels.</string>
 	<key>NSHumanReadableCopyright</key>
 	<string>Copyright © 2024 IbrarDev. Open Source.</string>
+	<key>NSInputMonitoringUsageDescription</key>
+	<string>Ozone requires Input Monitoring permission to count keyboard key presses across all applications.</string>
+	<key>NSMicrophoneUsageDescription</key>
+	<string>Ozone requires audio access to control per-application volume levels.</string>
 	<key>NSPrincipalClass</key>
 	<string>NSApplication</string>
+	<key>NSScreenCaptureUsageDescription</key>
+	<string>Ozone requires Screen &amp; System Audio Recording permission to capture and adjust per-application volume levels.</string>
+	<key>NSSystemAudioCaptureUsageDescription</key>
+	<string>Ozone requires audio access to control per-application volume levels.</string>
 	<key>SMPrivilegedExecutables</key>
 	<dict>
 		<key>com.ibrardev.Ozone.Helper</key>
 		<string>identifier "com.ibrardev.Ozone.Helper"</string>
 	</dict>
-	<key>NSInputMonitoringUsageDescription</key>
-	<string>Ozone requires Input Monitoring permission to count keyboard key presses across all applications.</string>
-	<key>NSAccessibilityUsageDescription</key>
-	<string>Ozone requires Accessibility permission to separate mouse and trackpad scroll directions.</string>
-	<key>NSScreenCaptureUsageDescription</key>
-	<string>Ozone requires Screen &amp; System Audio Recording permission to capture and adjust per-application volume levels.</string>
-	<key>NSAudioCaptureUsageDescription</key>
-	<string>Ozone requires audio access to control per-application volume levels.</string>
-	<key>NSSystemAudioCaptureUsageDescription</key>
-	<string>Ozone requires audio access to control per-application volume levels.</string>
-	<key>NSMicrophoneUsageDescription</key>
-	<string>Ozone requires audio access to control per-application volume levels.</string>
 </dict>
 </plist>

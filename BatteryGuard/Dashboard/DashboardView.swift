@@ -10,9 +10,9 @@ struct DashboardView: View {
 
     @State private var sidebarSelection: DashboardSection? = .dashboard
 
-    // Adaptive grid: 2 kolom, minimal 300pt
+    // Adaptive grid: 2 kolom, minimal 300pt — macOS 26 spacing lebih lega
     private let gridColumns = [
-        GridItem(.adaptive(minimum: 300, maximum: 500), spacing: 16)
+        GridItem(.adaptive(minimum: 300, maximum: 520), spacing: 18)
     ]
 
     var body: some View {
@@ -76,7 +76,7 @@ struct DashboardView: View {
 
     private var mainDashboardGrid: some View {
         ScrollView {
-            LazyVGrid(columns: gridColumns, alignment: .leading, spacing: 16) {
+            LazyVGrid(columns: gridColumns, alignment: .leading, spacing: 18) {
                 NetworkSpeedCard()
                 PowerFlowCard()
                 BatteryTemperatureCard()
@@ -89,7 +89,7 @@ struct DashboardView: View {
                 EnergyAppsCard()
                 CalibrationCard()
             }
-            .padding(20)
+            .padding(22)
         }
     }
 
@@ -106,64 +106,90 @@ struct DashboardView: View {
 
                 // Charge limit control
                 VStack(alignment: .leading, spacing: 16) {
-                    Text("Charge Limit")
-                        .font(.title2)
-                        .fontWeight(.semibold)
+                    HStack(spacing: 10) {
+                        ZStack {
+                            RoundedRectangle(cornerRadius: 10, style: .continuous)
+                                .fill(Color.green.opacity(0.15))
+                                .frame(width: 36, height: 36)
+                            Image(systemName: "bolt.badge.clock.fill")
+                                .font(.system(size: 16, weight: .semibold))
+                                .foregroundStyle(.green)
+                        }
+                        Text("Charge Limit")
+                            .font(.system(.title2, design: .rounded))
+                            .fontWeight(.bold)
+                    }
 
-                    GroupBox {
-                        VStack(alignment: .leading, spacing: 16) {
-                            Toggle("Enable Charge Limit", isOn: Binding(
-                                get: { viewModel.chargeLimitState.isEnabled },
-                                set: { _ in viewModel.toggleChargeLimit() }
-                            ))
-                            .toggleStyle(.switch)
+                    // Glass card
+                    VStack(alignment: .leading, spacing: 16) {
+                        Toggle("Enable Charge Limit", isOn: Binding(
+                            get: { viewModel.chargeLimitState.isEnabled },
+                            set: { _ in viewModel.toggleChargeLimit() }
+                        ))
+                        .toggleStyle(.switch)
+                        .tint(.green)
 
-                            Divider()
+                        Divider()
 
-                            VStack(alignment: .leading, spacing: 8) {
-                                HStack {
-                                    Text("Limit: \(viewModel.chargeLimitState.limitPercent)%")
-                                        .fontWeight(.medium)
-                                    Spacer()
-                                    Text("Recommended: 80%")
-                                        .font(.caption)
-                                        .foregroundStyle(.secondary)
-                                }
+                        VStack(alignment: .leading, spacing: 8) {
+                            HStack {
+                                Text("Limit")
+                                    .fontWeight(.medium)
+                                Text("\(viewModel.chargeLimitState.limitPercent)%")
+                                    .font(.system(.body, design: .monospaced))
+                                    .fontWeight(.bold)
+                                    .foregroundStyle(.green)
+                                    .contentTransition(.numericText())
+                                Spacer()
+                                Text("Recommended: 80%")
+                                    .font(.caption)
+                                    .foregroundStyle(.secondary)
+                            }
 
-                                Slider(
-                                    value: Binding(
-                                        get: { Double(viewModel.chargeLimitState.limitPercent) },
-                                        set: { viewModel.setChargeLimit(Int($0)) }
-                                    ),
-                                    in: 20...100,
-                                    step: 5
-                                )
-                                .disabled(!viewModel.chargeLimitState.isEnabled)
+                            Slider(
+                                value: Binding(
+                                    get: { Double(viewModel.chargeLimitState.limitPercent) },
+                                    set: { viewModel.setChargeLimit(Int($0)) }
+                                ),
+                                in: 20...100,
+                                step: 5
+                            )
+                            .disabled(!viewModel.chargeLimitState.isEnabled)
+                            .tint(.green)
 
-                                HStack {
-                                    Text("20%")
-                                        .font(.caption2)
-                                        .foregroundStyle(.secondary)
-                                    Spacer()
-                                    Text("100%")
-                                        .font(.caption2)
-                                        .foregroundStyle(.secondary)
-                                }
+                            HStack {
+                                Text("20%")
+                                    .font(.caption2)
+                                    .foregroundStyle(.tertiary)
+                                Spacer()
+                                Text("100%")
+                                    .font(.caption2)
+                                    .foregroundStyle(.tertiary)
                             }
                         }
-                        .padding(4)
+                        .animation(.spring(response: 0.35), value: viewModel.chargeLimitState.isEnabled)
+                    }
+                    .padding(16)
+                    .background(.regularMaterial)
+                    .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
+                    .overlay {
+                        RoundedRectangle(cornerRadius: 14, style: .continuous)
+                            .strokeBorder(.secondary.opacity(0.12), lineWidth: 1)
                     }
 
                     // Error display
                     if let error = viewModel.chargeLimitError {
-                        Label(error, systemImage: "exclamationmark.triangle")
+                        Label(error, systemImage: "exclamationmark.triangle.fill")
                             .font(.caption)
                             .foregroundStyle(.orange)
+                            .padding(10)
+                            .background(.orange.opacity(0.08))
+                            .clipShape(RoundedRectangle(cornerRadius: 8, style: .continuous))
                     }
                 }
-                .padding(.horizontal, 20)
+                .padding(.horizontal, 22)
             }
-            .padding(.vertical, 20)
+            .padding(.vertical, 22)
         }
     }
 
@@ -198,6 +224,7 @@ struct DashboardView: View {
                 viewModel.startAll()
             } label: {
                 Image(systemName: "arrow.clockwise")
+                    .font(.system(size: 12, weight: .medium))
             }
             .help("Refresh")
         }
@@ -206,6 +233,7 @@ struct DashboardView: View {
             if viewModel.isApplyingLimit {
                 ProgressView()
                     .controlSize(.small)
+                    .tint(.green)
             }
         }
     }
@@ -217,49 +245,65 @@ struct HelperInstallBanner: View {
     @EnvironmentObject var helperInstaller: HelperInstaller
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 12) {
-            HStack(spacing: 10) {
-                Image(systemName: "exclamationmark.shield.fill")
-                    .font(.title2)
-                    .foregroundStyle(.orange)
+        VStack(alignment: .leading, spacing: 14) {
+            HStack(spacing: 12) {
+                ZStack {
+                    RoundedRectangle(cornerRadius: 10, style: .continuous)
+                        .fill(Color.orange.opacity(0.15))
+                        .frame(width: 40, height: 40)
+                    Image(systemName: "exclamationmark.shield.fill")
+                        .font(.system(size: 18, weight: .semibold))
+                        .foregroundStyle(.orange)
+                }
 
-                VStack(alignment: .leading, spacing: 2) {
+                VStack(alignment: .leading, spacing: 3) {
                     Text("Helper Belum Terinstall")
-                        .fontWeight(.semibold)
+                        .font(.system(.subheadline, design: .rounded))
+                        .fontWeight(.bold)
                     Text("Fitur pembatasan baterai memerlukan komponen tambahan (Helper) agar bisa mengontrol daya masuk.")
                         .font(.caption)
                         .foregroundStyle(.secondary)
+                        .fixedSize(horizontal: false, vertical: true)
                 }
             }
 
-            Divider()
+            Rectangle()
+                .fill(
+                    LinearGradient(
+                        colors: [.orange.opacity(0.4), .orange.opacity(0)],
+                        startPoint: .leading, endPoint: .trailing
+                    )
+                )
+                .frame(height: 1)
 
             Text("Klik tombol di bawah ini untuk menginstall. Anda akan diminta memasukkan Password atau Touch ID Mac Anda.")
                 .font(.caption)
                 .foregroundStyle(.secondary)
                 .fixedSize(horizontal: false, vertical: true)
 
-            HStack {
+            HStack(spacing: 10) {
                 Button("Install Helper Sekarang") {
                     helperInstaller.install()
                 }
                 .buttonStyle(.borderedProminent)
                 .tint(.orange)
-                
+                .controlSize(.regular)
+
                 if helperInstaller.installStatus == .checking {
                     ProgressView()
                         .controlSize(.small)
+                        .tint(.orange)
                 }
             }
         }
-        .padding(14)
-        .background(.orange.opacity(0.08))
-        .clipShape(RoundedRectangle(cornerRadius: 10))
-        .overlay(
-            RoundedRectangle(cornerRadius: 10)
-                .strokeBorder(.orange.opacity(0.3), lineWidth: 1)
-        )
-        .padding(.horizontal, 20)
+        .padding(16)
+        .background(.orange.opacity(0.07))
+        .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
+        .overlay {
+            RoundedRectangle(cornerRadius: 14, style: .continuous)
+                .strokeBorder(.orange.opacity(0.25), lineWidth: 1)
+        }
+        .padding(.horizontal, 22)
     }
 }
 
