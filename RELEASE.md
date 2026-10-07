@@ -1,97 +1,98 @@
 # Ozone v1.2.0 — Polish & Stability Update
 
-Rilis fokus pada perbaikan bug, optimasi performa scroll, dan peningkatan kualitas UI secara menyeluruh. Tidak ada fitur baru besar — semua energi dicurahkan untuk memastikan pengalaman yang halus, responsif, dan bebas error di seluruh aplikasi.
+This release focuses on bug fixes, scroll performance optimizations, and overall UI quality improvements. No major new features were introduced — all energy was poured into ensuring a smooth, responsive, and error-free experience across the application.
 
 ---
 
-## ✨ Perubahan di v1.2.0
+## ✨ Changes in v1.2.0
 
-### 🏗️ Perubahan Arsitektur (Breaking Internal)
+### 🏗️ Architectural Changes (Internal Breaking Changes)
 
-- **Dashboard dimigrasi ke `NSWindowController`**
-  Dashboard tidak lagi dikelola sebagai SwiftUI `Window` scene. Kini dikontrol penuh oleh `AppDelegate` via `NSWindowController`, memungkinkan kontrol penuh atas kapan window ditampilkan atau disembunyikan — tanpa gangguan dari SwiftUI scene lifecycle.
+- **Dashboard migrated to `NSWindowController`**
+  The Dashboard is no longer managed as a SwiftUI `Window` scene. It is now fully controlled by the `AppDelegate` via `NSWindowController`, allowing full control over when the window is shown or hidden — without interference from the SwiftUI scene lifecycle.
 
-- **Menghapus SwiftUI `Window` scene dari `BatteryGuardApp`**
-  Hanya `Settings` scene yang tersisa. Dashboard dibuat secara *lazy* (on-demand) hanya saat user pertama kali membukanya, sehingga tidak ada overhead saat launch.
+- **Removed SwiftUI `Window` scene from `BatteryGuardApp`**
+  Only the `Settings` scene remains. The Dashboard is created lazily (on-demand) only when the user first opens it, eliminating launch overhead.
 
 ---
 
 ### 🐛 Bug Fixes
 
-#### Dashboard — Tidak Lagi Auto-Terbuka Saat Launch
-- **Root cause:** SwiftUI `Window` scene selalu menampilkan window-nya saat launch, dan secara aktif melawan panggilan `orderOut()` dari luar — menciptakan loop tak terbatas.
-- **Fix:** Hapus `Window` scene, ganti dengan `NSWindowController`. Dashboard hanya muncul saat user secara eksplisit memintanya (klik ⊞ di popover atau klik icon Dock).
+#### Dashboard — No Longer Auto-Opens on Launch
+- **Root cause:** The SwiftUI `Window` scene always displays its window upon launch and actively fights `orderOut()` calls from the outside — creating an infinite loop.
+- **Fix:** Removed the `Window` scene and replaced it with `NSWindowController`. The Dashboard now only appears when explicitly requested by the user (clicking ⊞ in the popover or clicking the Dock icon).
 
-#### About Tab — Icon App & Versi Hardcoded
-- **Fix:** Icon app sekarang menggunakan `NSApp.applicationIconImage` — otomatis sinkron dengan `Assets.xcassets`, tidak perlu update manual.
-- **Fix:** Versi membaca dari `Bundle.main.infoDictionary["CFBundleShortVersionString"]` dan build number dari `CFBundleVersion` — selalu sinkron dengan Xcode project settings.
-- **Fix:** Nama app membaca dari `CFBundleDisplayName` / `CFBundleName` secara dinamis.
+#### About Tab — Hardcoded App Icon & Version
+- **Fix:** The app icon now uses `NSApp.applicationIconImage` — automatically syncing with `Assets.xcassets`, requiring no manual updates.
+- **Fix:** Version reads dynamically from `Bundle.main.infoDictionary["CFBundleShortVersionString"]` and build number from `CFBundleVersion` — always in sync with Xcode project settings.
+- **Fix:** App name reads from `CFBundleDisplayName` / `CFBundleName` dynamically.
 
-#### About Tab — SF Symbol Tidak Valid
-- **Fix:** `battery.75.bolt` tidak ada di SF Symbols — dihapus, digantikan oleh app icon asli.
+#### About Tab — Invalid SF Symbol
+- **Fix:** `battery.75.bolt` doesn't exist in SF Symbols — removed and replaced by the actual app icon.
 
 #### Settings — `SettingsLink` vs Deprecated `sendAction`
-- **Fix:** Migrasi dari `NSApp.sendAction("showSettingsWindow:")` (deprecated di macOS 14+) ke `SettingsLink` dengan `#available(macOS 14.0, *)` guard dan fallback `sendAction` untuk macOS 13.
-- **Fix:** Tambah `settingsIconLabel` sebagai shared computed property agar tidak duplikasi kode antara kedua branch availability.
+- **Fix:** Migrated from `NSApp.sendAction("showSettingsWindow:")` (deprecated in macOS 14+) to `SettingsLink` using an `#available(macOS 14.0, *)` guard and fallback `sendAction` for macOS 13.
+- **Fix:** Added `settingsIconLabel` as a shared computed property to prevent code duplication between the two availability branches.
 
-#### MenuBar — `openWindow` Environment Dependency Dihapus
-- **Fix:** Tombol Dashboard di `MenuBarView` tidak lagi menggunakan `@Environment(\.openWindow)`. Kini mengirim `Notification.Name.openDashboardRequest` ke `AppDelegate` yang mengelola window secara langsung.
+#### MenuBar — `openWindow` Environment Dependency Removed
+- **Fix:** The Dashboard button in `MenuBarView` no longer uses `@Environment(\.openWindow)`. It now posts `Notification.Name.openDashboardRequest` to the `AppDelegate`, which directly manages the window.
 
-#### Volume Mixer — Audio Output Berbeda di Background
-- **Root cause:** `VolumeMixerService` di-inisialisasi sebagai `@StateObject` di dalam `VolumeMixerView`. Hal ini menyebabkan service di-*deallocate* (dihancurkan) setiap kali dashboard ditutup, yang berakibat pada matinya *Process Tap CoreAudio* sehingga volume kembali ke default passthrough.
-- **Fix:** Siklus hidup (lifecycle) dipindahkan ke `SystemStatsViewModel` agar berumur sama dengan aplikasi (app lifetime). View sekarang menggunakan pola *Wrapper* dengan `@EnvironmentObject` dan meneruskan instance ke inner view yang menggunakan `@ObservedObject` (mempertahankan dukungan syntax `$service` pada view tanpa mengorbankan stabilitas background).
+#### Volume Mixer — Different Audio Output in Background
+- **Root cause:** `VolumeMixerService` was initialized as a `@StateObject` inside `VolumeMixerView`. This caused the service to be deallocated every time the dashboard was closed, killing the CoreAudio Process Tap and reverting the volume to default passthrough.
+- **Fix:** Moved the lifecycle to `SystemStatsViewModel` so it shares the app's lifetime. The view now uses a Wrapper pattern with `@EnvironmentObject` and passes the instance to an inner view using `@ObservedObject` (preserving `$service` binding syntax on the view without compromising background stability).
 
-#### PowerAdapterCard — SF Symbol Tidak Valid
-- **Fix:** Symbol `powerplug.slash` tidak ada — diganti dengan kombinasi `powerplug` + `xmark` overlay yang valid.
+#### PowerAdapterCard — Invalid SF Symbol
+- **Fix:** The `powerplug.slash` symbol does not exist — replaced with a valid combination of `powerplug` + `xmark` overlay.
 
 #### KeyboardMonitorView — Duplicate `ForEach` ID Warning
-- **Fix:** Migrasi dari `id: \.self` ke `enumerated()` + index-based ID untuk heatmap keys, menghilangkan warning duplikat ID di console.
+- **Fix:** Migrated from `id: \.self` to `enumerated()` + index-based ID for heatmap keys, eliminating duplicate ID warnings in the console.
 
 ---
 
 ### ⚡ Performance
 
-- **`DashboardCardView` — Scroll Lebih Halus**
-  Dihapus: hover state animation, material blur background, dan redundant shadow layers yang menyebabkan stuttering saat scroll `LazyVGrid`. Kini lebih ringan dan konsisten di 60fps.
+- **`DashboardCardView` — Smoother Scrolling**
+  Removed: hover state animations, material blur backgrounds, and redundant shadow layers that caused stuttering when scrolling the `LazyVGrid`. It is now lighter and consistently runs at 60fps.
 
 ---
 
 ### 🎨 UI/UX
 
 - **MenuBar Popover — "Quick Stats" Row**
-  Ditambahkan baris ringkas di bagian atas popover yang menampilkan: Battery Health, Cycle Count, CPU Temp, RAM Usage, dan Download Speed — tanpa perlu membuka Dashboard.
+  Added a compact row at the top of the popover displaying: Battery Health, Cycle Count, CPU Temp, RAM Usage, and Download Speed — without needing to open the Dashboard.
 
-- **AppDelegate — Popover Size Disesuaikan**
-  Ukuran popover ditingkatkan untuk mengakomodasi Quick Stats row yang baru ditambahkan.
+- **AppDelegate — Adjusted Popover Size**
+  Increased the popover size to accommodate the newly added Quick Stats row.
 
-- **About Tab — Tampilan Lebih Akurat**
-  Icon app sekarang tampil nyata (bukan placeholder hijau), versi dan build number selalu sinkron otomatis.
+- **About Tab — More Accurate Display**
+  The app icon now displays the real icon (instead of a green placeholder), and the version and build numbers always sync automatically.
 
 ---
 
 ### 🔧 Developer / Internal
 
-- Tambah `Notification.Name.openDashboardRequest` extension untuk komunikasi bersih antara SwiftUI views dan AppDelegate.
-- Tambah `UserDefaults.standard.set(false, forKey: "NSQuitAlwaysKeepsWindows")` untuk mencegah window restoration yang tidak diinginkan saat launch berikutnya.
-- Semua debug log `[AppDelegate]` yang ditambahkan saat sesi debugging telah dibersihkan dari production build path.
+- Added `Notification.Name.openDashboardRequest` extension for clean communication between SwiftUI views and the AppDelegate.
+- Added `UserDefaults.standard.set(false, forKey: "NSQuitAlwaysKeepsWindows")` to prevent unwanted window restoration on the next launch.
+- All `[AppDelegate]` debug logs added during the debugging session have been cleaned up from the production build path.
 
 ---
 
-## 📁 File yang Diubah
+## 📁 Changed Files
 
-| File | Perubahan |
+| File | Changes |
 |------|-----------|
-| `App/BatteryGuardApp.swift` | Hapus `Window` scene, pertahankan `Settings` scene saja |
-| `App/AppDelegate.swift` | Migrasi ke `NSWindowController`, tambah `Notification.Name`, hapus suppress logic |
-| `MenuBar/MenuBarView.swift` | Ganti `openWindow` → `NotificationCenter`, hapus `@Environment(\.openWindow)`, tambah Quick Stats |
-| `Settings/SettingsView.swift` | Fix About tab: app icon asli, versi dinamis, hapus SF Symbol invalid |
-| `Dashboard/Cards/DashboardCardView.swift` | Hapus hover animation & material blur untuk performa scroll |
-| `Dashboard/Cards/PowerAdapterCard.swift` | Fix SF Symbol `powerplug.slash` |
-| `Dashboard/Cards/KeyboardMonitorView.swift` | Fix duplicate ForEach ID |
+| `App/BatteryGuardApp.swift` | Removed `Window` scene, kept only `Settings` scene |
+| `App/AppDelegate.swift` | Migrated to `NSWindowController`, added `Notification.Name`, removed suppress logic |
+| `MenuBar/MenuBarView.swift` | Replaced `openWindow` → `NotificationCenter`, removed `@Environment(\.openWindow)`, added Quick Stats |
+| `Settings/SettingsView.swift` | Fixed About tab: real app icon, dynamic version, removed invalid SF Symbol |
+| `Dashboard/Cards/DashboardCardView.swift` | Removed hover animation & material blur for scroll performance |
+| `Dashboard/Cards/PowerAdapterCard.swift` | Fixed SF Symbol `powerplug.slash` |
+| `Dashboard/Cards/KeyboardMonitorView.swift` | Fixed duplicate ForEach ID |
 
 ---
 
 ## 💻 Requirements
 
-- macOS 13 (Ventura) atau lebih baru
-- Apple Silicon (M1/M2/M3/M4) atau Intel Mac
+- macOS 13 (Ventura) or later
+- Apple Silicon (M1/M2/M3/M4) or Intel Mac
+
