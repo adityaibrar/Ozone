@@ -35,10 +35,10 @@ struct EnergyAppsCard: View {
                     HStack {
                         Spacer()
                         VStack(spacing: 6) {
-                            Image(systemName: "bolt.slash")
+                            Image(systemName: "hammer.fill")
                                 .font(.title2)
                                 .foregroundStyle(.secondary)
-                            Text("No significant energy users")
+                            Text("Tidak ada aplikasi developer aktif")
                                 .font(.caption)
                                 .foregroundStyle(.secondary)
                         }
@@ -55,7 +55,7 @@ struct EnergyAppsCard: View {
                     }
 
                     // Disclaimer
-                    Text("Source: NSWorkspace running apps. Enable powermetrics in Settings for accurate data.")
+                    Text("Memfilter aplikasi & tools developer yang aktif (IDE, Terminal, Docker, DB, dll).")
                         .font(.caption2)
                         .foregroundStyle(.tertiary)
                         .padding(.top, 4)
@@ -69,23 +69,85 @@ struct EnergyAppsCard: View {
 
     /// Ambil running apps dari NSWorkspace
     /// Ini adalah data yang tersedia tanpa privilege tambahan
+    @MainActor
     private func loadEnergyData() async {
         isLoading = true
         defer { isLoading = false }
 
         let apps = NSWorkspace.shared.runningApplications
-            .filter { $0.activationPolicy == .regular && $0.isActive != false }
+            .filter { $0.activationPolicy == .regular && isDeveloperApp($0) }
             .prefix(10)
             .map { app -> AppEnergyInfo in
                 AppEnergyInfo(
                     name: app.localizedName ?? "Unknown",
                     bundleID: app.bundleIdentifier ?? "",
                     icon: app.icon,
-                    energyImpact: "—" // Butuh powermetrics untuk nilai actual
+                    energyImpact: app.isActive ? "Active" : "Background"
                 )
             }
 
         energyApps = Array(apps)
+    }
+
+    /// Memeriksa apakah aplikasi tergolong developer tool atau environment developer
+    private func isDeveloperApp(_ app: NSRunningApplication) -> Bool {
+        let name = (app.localizedName ?? "").lowercased()
+        let bundleID = (app.bundleIdentifier ?? "").lowercased()
+
+        // 1. Bundle ID matchers yang umum digunakan developer
+        let devBundlePrefixes = [
+            "com.apple.dt.",            // Xcode, Simulator, Instruments
+            "com.microsoft.vscode",      // Visual Studio Code
+            "com.todesktop.",            // Cursor, Windsurf, dev desktop wrappers
+            "com.jetbrains.",            // JetBrains suite
+            "com.google.android.studio", // Android Studio
+            "com.googlecode.iterm2",     // iTerm2
+            "dev.warp.",                 // Warp Terminal
+            "com.docker.",               // Docker Desktop
+            "dev.orbstack.",             // OrbStack
+            "com.tinyapp.tableplus",     // TablePlus
+            "com.postmanlabs.",          // Postman
+            "com.insomnia.",             // Insomnia
+            "com.sequel-ace.",           // Sequel Ace
+            "io.dbeaver.",               // DBeaver
+            "com.github.GitHubClient",   // GitHub Desktop
+            "com.fournova.Tower",        // Tower Git
+            "com.DanPristupov.Fork",     // Fork Git
+            "com.sublimetext.",          // Sublime Text
+            "dev.zed.Zed",               // Zed Editor
+            "com.panic.Nova",            // Nova Editor
+            "com.proxyman.",             // Proxyman
+            "org.wireshark.",            // Wireshark
+            "com.charlesproxy."          // Charles Proxy
+        ]
+
+        for prefix in devBundlePrefixes {
+            if bundleID.hasPrefix(prefix.lowercased()) {
+                return true
+            }
+        }
+
+        // 2. Keyword matchers pada nama aplikasi atau bundle ID
+        let devKeywords = [
+            "xcode", "code", "cursor", "windsurf", "antigravity",
+            "android studio", "intellij", "webstorm", "pycharm", "clion",
+            "goland", "datagrip", "phpstorm", "rider", "rubymine", "fleet",
+            "sublime", "zed", "nova", "atom", "bbedit", "textmate",
+            "terminal", "iterm", "warp", "ghostty", "alacritty", "kitty", "wezterm", "hyper",
+            "docker", "orbstack", "podman", "rancher", "simulator", "instruments",
+            "postman", "insomnia", "tableplus", "dbeaver", "beekeeper", "pgadmin",
+            "compass", "redis", "sequel ace",
+            "git", "fork", "sourcetree", "gitkraken", "github desktop", "tower",
+            "proxyman", "wireshark", "charles", "devtoys", "hoppscotch", "herd", "mamp", "xampp"
+        ]
+
+        for keyword in devKeywords {
+            if name.contains(keyword) || bundleID.contains(keyword) {
+                return true
+            }
+        }
+
+        return false
     }
 }
 

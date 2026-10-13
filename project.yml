@@ -68,6 +68,8 @@ targets:
         CODE_SIGN_STYLE: Automatic
         ENABLE_APP_SANDBOX: NO
         ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
+        ASSETCATALOG_COMPILER_GENERATE_ASSET_SYMBOLS: NO
+        ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS: NO
 
     # Semua source file main app — explicit list untuk avoid duplikasi
     sources:
@@ -82,6 +84,7 @@ targets:
       - path: BatteryGuard/App/MenuBarAppKitLabel.swift
       # Menu Bar
       - path: BatteryGuard/MenuBar/MenuBarView.swift
+      - path: BatteryGuard/MenuBar/MenuBarPortsView.swift
       - path: BatteryGuard/MenuBar/StatusBarMetricView.swift
       # Dashboard root
       - path: BatteryGuard/Dashboard/DashboardView.swift
@@ -103,6 +106,7 @@ targets:
       - path: BatteryGuard/Dashboard/Cards/VolumeMixerView.swift
       - path: BatteryGuard/Dashboard/Cards/MouseControlView.swift
       - path: BatteryGuard/Dashboard/Cards/KeyboardMonitorView.swift
+      - path: BatteryGuard/Dashboard/Cards/PortManagerView.swift
       # Settings
       - path: BatteryGuard/Settings/SettingsView.swift
       # Uninstaller
@@ -117,6 +121,7 @@ targets:
       - path: BatteryGuard/Models/UninstallerModels.swift
       - path: BatteryGuard/Models/VolumeApp.swift
       - path: BatteryGuard/Models/KeyboardModels.swift
+      - path: BatteryGuard/Models/PortProcessInfo.swift
       # Services
       - path: BatteryGuard/Services/BatteryMonitor.swift
       - path: BatteryGuard/Services/RAMMonitor.swift
@@ -139,11 +144,13 @@ targets:
       - path: BatteryGuard/Services/TapGainEngine.swift
       - path: BatteryGuard/Services/KeyboardMonitorService.swift
       - path: BatteryGuard/Services/KeyboardStatsStore.swift
+      - path: BatteryGuard/Services/PortMonitorService.swift
       # XPC client
       - path: BatteryGuard/XPC/HelperConnection.swift
       # ViewModel
       - path: BatteryGuard/ViewModels/SystemStatsViewModel.swift
       - path: BatteryGuard/ViewModels/UninstallerViewModel.swift
+      - path: BatteryGuard/ViewModels/PortManagerViewModel.swift
 
     # Helper dependencies & copying
     dependencies:
@@ -158,6 +165,7 @@ targets:
           mkdir -p "${CONFIGURATION_BUILD_DIR}/${CONTENTS_FOLDER_PATH}/Library/LaunchDaemons"
           cp "${SRCROOT}/BatteryGuard/Resources/com.ibrardev.Ozone.Helper.plist" "${CONFIGURATION_BUILD_DIR}/${CONTENTS_FOLDER_PATH}/Library/LaunchDaemons/"
           cp "${CONFIGURATION_BUILD_DIR}/com.ibrardev.Ozone.Helper" "${CONFIGURATION_BUILD_DIR}/${CONTENTS_FOLDER_PATH}/MacOS/"
+        basedOnDependencyAnalysis: false
 
   # ─────────────────────────────────────────────
   # MARK: - Privileged Helper Target

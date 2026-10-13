@@ -14,14 +14,96 @@ struct MenuBarView: View {
     @ObservedObject private var mouseService = MouseScrollService.shared
 
     @State private var tempLimit: Double = 80
+    @State private var selectedSection: MenuBarSection = .system
+
+    enum MenuBarSection: String, CaseIterable, Identifiable {
+        case system = "System"
+        case ports = "Ports"
+
+        var id: String { rawValue }
+
+        var icon: String {
+            switch self {
+            case .system: return "bolt.fill"
+            case .ports: return "network"
+            }
+        }
+    }
 
     var body: some View {
         VStack(spacing: 0) {
 
+            // MARK: ── Top Section Selector ─────────────────
+            topSectionSelector
+                .padding(.horizontal, 14)
+                .padding(.top, 10)
+                .padding(.bottom, 6)
+
+            Divider().opacity(0.4)
+
+            // MARK: ── Section Content ──────────────────────
+            if selectedSection == .system {
+                systemContent
+            } else {
+                MenuBarPortsView()
+            }
+
+            Divider().opacity(0.4)
+
+            // MARK: ── Footer ──────────────────────────────
+            footerActions
+                .padding(.horizontal, 12)
+                .padding(.vertical, 8)
+        }
+        .frame(width: 325)
+        .background(.ultraThinMaterial)
+        .onAppear {
+            tempLimit = Double(viewModel.chargeLimitState.limitPercent)
+        }
+        .onChange(of: viewModel.chargeLimitState.limitPercent) { newVal in
+            tempLimit = Double(newVal)
+        }
+    }
+
+    // MARK: - Top Section Selector
+
+    private var topSectionSelector: some View {
+        HStack(spacing: 6) {
+            ForEach(MenuBarSection.allCases) { section in
+                let isSelected = selectedSection == section
+                Button {
+                    withAnimation(.spring(response: 0.25, dampingFraction: 0.75)) {
+                        selectedSection = section
+                    }
+                } label: {
+                    HStack(spacing: 5) {
+                        Image(systemName: section.icon)
+                            .font(.system(size: 11, weight: .semibold))
+                        Text(section.rawValue)
+                            .font(.system(size: 11, weight: isSelected ? .bold : .medium, design: .rounded))
+                    }
+                    .padding(.vertical, 4)
+                    .frame(maxWidth: .infinity)
+                    .foregroundStyle(isSelected ? Color.primary : Color.secondary)
+                    .background(isSelected ? Color.secondary.opacity(0.16) : Color.clear)
+                    .clipShape(RoundedRectangle(cornerRadius: 7, style: .continuous))
+                }
+                .buttonStyle(.plain)
+            }
+        }
+        .padding(3)
+        .background(Color.secondary.opacity(0.08))
+        .clipShape(RoundedRectangle(cornerRadius: 9, style: .continuous))
+    }
+
+    // MARK: - System Content
+
+    private var systemContent: some View {
+        VStack(spacing: 0) {
             // MARK: ── Battery Hero ─────────────────────────
             batteryHeroSection
                 .padding(.horizontal, 14)
-                .padding(.top, 14)
+                .padding(.top, 10)
                 .padding(.bottom, 12)
 
             Divider().opacity(0.4)
@@ -52,21 +134,6 @@ struct MenuBarView: View {
                     .padding(.horizontal, 14)
                     .padding(.vertical, 8)
             }
-
-            Divider().opacity(0.4)
-
-            // MARK: ── Footer ──────────────────────────────
-            footerActions
-                .padding(.horizontal, 12)
-                .padding(.vertical, 8)
-        }
-        .frame(width: 310)
-        .background(.ultraThinMaterial)
-        .onAppear {
-            tempLimit = Double(viewModel.chargeLimitState.limitPercent)
-        }
-        .onChange(of: viewModel.chargeLimitState.limitPercent) { newVal in
-            tempLimit = Double(newVal)
         }
     }
 

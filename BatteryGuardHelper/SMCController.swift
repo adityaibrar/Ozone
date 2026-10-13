@@ -122,7 +122,7 @@ final class SMCController {
     // MARK: Lifecycle
 
     func open() throws {
-        let service = IOServiceGetMatchingService(kIOMasterPortDefault, IOServiceMatching("AppleSMC"))
+        let service = IOServiceGetMatchingService(kIOMainPortDefault, IOServiceMatching("AppleSMC"))
         guard service != 0 else { throw SMCError.driverNotFound }
         let ret = IOServiceOpen(service, mach_task_self_, 0, &connection)
         IOObjectRelease(service)
@@ -168,7 +168,7 @@ final class SMCController {
     }
 
     func writeBytes(_ key: String, bytes: (UInt8, UInt8, UInt8, UInt8), size: IOByteCount32) throws {
-        let info = try keyInfo(key)
+        _ = try keyInfo(key)
         var input = SMCParamStruct()
         input.key = fourCC(key)
         input.bytes.0 = bytes.0
@@ -227,7 +227,7 @@ final class BatteryReader {
 
     /// Helper: baca satu property dari AppleSmartBattery via IOKit
     private static func readBatteryProperty(_ key: String) -> AnyObject? {
-        let service = IOServiceGetMatchingService(kIOMasterPortDefault,
+        let service = IOServiceGetMatchingService(kIOMainPortDefault,
                                                   IOServiceMatching("AppleSmartBattery"))
         guard service != 0 else { return nil }
         defer { IOObjectRelease(service) }

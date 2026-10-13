@@ -64,6 +64,9 @@ struct DashboardView: View {
         case .keyboard:
             KeyboardMonitorView()
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
+        case .portManager:
+            PortManagerView()
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
         case .log:
             LogView()
         case .uninstaller:

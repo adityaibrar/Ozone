@@ -14,6 +14,7 @@ enum DashboardSection: String, CaseIterable, Identifiable {
     case energyUse     = "Energy Use"
     case volumeMixer   = "Volume Mixer"
     case keyboard      = "Keyboard Monitor"
+    case portManager   = "Port Manager"
     case log           = "Log"
     case uninstaller   = "Uninstaller"
 
@@ -25,6 +26,7 @@ enum DashboardSection: String, CaseIterable, Identifiable {
         case .energyUse:      return "bolt.fill"
         case .volumeMixer:    return "speaker.wave.3.fill"
         case .keyboard:       return "keyboard.fill"
+        case .portManager:    return "network"
         case .log:            return "terminal.fill"
         case .uninstaller:    return "trash.fill"
         }
@@ -38,6 +40,7 @@ enum DashboardSection: String, CaseIterable, Identifiable {
         case .energyUse:      return .orange
         case .volumeMixer:    return .teal
         case .keyboard:       return .purple
+        case .portManager:    return .cyan
         case .log:            return .secondary
         case .uninstaller:    return .red
         }

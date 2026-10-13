@@ -34,6 +34,7 @@
 		5CCAA695C2181C62A6B0680A /* CycleHistoryStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 37E86777137D7F06AC20F396 /* CycleHistoryStore.swift */; };
 		5CCAB813D7F9246432FCDFCD /* IOKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 13FFDE068E0ACAFA80CFF32A /* IOKit.framework */; };
 		607AC70B43ED4C2275CC23EC /* BatteryGuardApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 91EF1B6D91DA57BF699F1FE0 /* BatteryGuardApp.swift */; };
+		61B75DCC42535FE7EAE1650A /* PortManagerViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 60256E0E20A0DD0DA72CAA6F /* PortManagerViewModel.swift */; };
 		61F641EC0175EA943F22CF0B /* CPUStats.swift in Sources */ = {isa = PBXBuildFile; fileRef = F4299C2ABCEFE97D283C9F7B /* CPUStats.swift */; };
 		65153A98BB035CD6DEA9C039 /* UninstallerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 783524458A23DE4440D50981 /* UninstallerView.swift */; };
 		6C2A729D43BC5A2DCA60ADB2 /* PreferencesStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = D158A254CE0B3A9AE6CB8BCA /* PreferencesStore.swift */; };
@@ -41,9 +42,10 @@
 		73EA50F48E5B4612A899F411 /* PowerFlowCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = 077375645146AC6ED1D2E2BE /* PowerFlowCard.swift */; };
 		75598CEA7661BBE00C778666 /* KeyboardMonitorService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2F7AF948F7283E7CF4C27037 /* KeyboardMonitorService.swift */; };
 		76B33FD7693FF1E95963E877 /* ResponsibleProcess.swift in Sources */ = {isa = PBXBuildFile; fileRef = DF371F5A19ACFE69D007A1E9 /* ResponsibleProcess.swift */; };
-		79A9D1F34315613300808D74 /* com.ibrardev.Ozone.Helper in Resources */ = {isa = PBXBuildFile; fileRef = 1BCB561FED45D1C86F1BDF86 /* com.ibrardev.Ozone.Helper */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
+		79A9D1F34315613300808D74 /* OzoneHelper in Resources */ = {isa = PBXBuildFile; fileRef = 1BCB561FED45D1C86F1BDF86 /* OzoneHelper */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 		7F68C4BC8CB41B713D00167F /* TemperatureMonitor.swift in Sources */ = {isa = PBXBuildFile; fileRef = AFA09F9F4F15A8588019B826 /* TemperatureMonitor.swift */; };
 		7F81BAA21B73043EC86265F9 /* UninstallerModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7433D417FFC7AF3A93F76D69 /* UninstallerModels.swift */; };
+		7FFFD80E5FABD753B64EA1F1 /* PortMonitorService.swift in Sources */ = {isa = PBXBuildFile; fileRef = D8B3938BD59E2F1A00E96C48 /* PortMonitorService.swift */; };
 		83BC5161D27FBA17C0260394 /* ServiceManagement.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = ED3DB3B815D2E31C5ED5F608 /* ServiceManagement.framework */; };
 		840B0D6BBDCED3CECF6A226F /* BatteryMonitor.swift in Sources */ = {isa = PBXBuildFile; fileRef = B5A68199B39F12549719ADE0 /* BatteryMonitor.swift */; };
 		87FD84330282651A69F095DF /* NetworkStats.swift in Sources */ = {isa = PBXBuildFile; fileRef = F01282B07A047409D030484D /* NetworkStats.swift */; };
@@ -60,6 +62,7 @@
 		B3FE8FDF5FC817DB36AB002B /* KeyboardMonitorView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E2057A71EDC6348144E64B49 /* KeyboardMonitorView.swift */; };
 		B5BF27C628E582C18C4B221B /* DashboardView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8CF6E91BBD1745D4BD0418DF /* DashboardView.swift */; };
 		BAD827D9D1C623A2259546A2 /* LevelHistoryStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = E52219BAD2858D4D12598C66 /* LevelHistoryStore.swift */; };
+		BEDA13512AAF45FB5F8596F8 /* PortProcessInfo.swift in Sources */ = {isa = PBXBuildFile; fileRef = A8A89FBCDEFBDF460ADC6B5B /* PortProcessInfo.swift */; };
 		BFACDAD8347C292F0FBEC1FF /* PowerAdapterCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F33C6ECF2D7AD45F7EE452E /* PowerAdapterCard.swift */; };
 		C41FF45F37B6385C573F071A /* CPUMonitor.swift in Sources */ = {isa = PBXBuildFile; fileRef = F3C160D920430C8DB67CCA3B /* CPUMonitor.swift */; };
 		CB3774F37349A0BCEFA17860 /* StatusBarMetricView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B3E0E99599917620C1D6A827 /* StatusBarMetricView.swift */; };
@@ -74,7 +77,9 @@
 		E7588D67332CBD0075A47F25 /* VolumeMixerService.swift in Sources */ = {isa = PBXBuildFile; fileRef = F91048D417A98BC0DCD6F9B1 /* VolumeMixerService.swift */; };
 		E8332C46EFF0801BDF8222EE /* SidebarView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 76E5330166A62CEEEB7B67A0 /* SidebarView.swift */; };
 		EB07D452B017CD09E711FC8F /* HelperConnection.swift in Sources */ = {isa = PBXBuildFile; fileRef = DFEB663077DAF0C067B75CAA /* HelperConnection.swift */; };
+		EFF636669E11E132B1BA40E9 /* PortManagerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9F45C1497A4CFB0B57111EB0 /* PortManagerView.swift */; };
 		FA695F5E211CF901CD10A0E9 /* BatteryInfo.swift in Sources */ = {isa = PBXBuildFile; fileRef = 385F744FE0E709BA8A3E77FA /* BatteryInfo.swift */; };
+		FD614AC251CB8DCA9DEDD1E8 /* MenuBarPortsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3CFCD35D332B80704319CB18 /* MenuBarPortsView.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -92,7 +97,7 @@
 		11B573512C9F5E64A1CA8138 /* KeyboardStatsStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KeyboardStatsStore.swift; sourceTree = "<group>"; };
 		13FFDE068E0ACAFA80CFF32A /* IOKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = IOKit.framework; path = System/Library/Frameworks/IOKit.framework; sourceTree = SDKROOT; };
 		15B59F52C97D17E03A812D09 /* DashboardCardView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DashboardCardView.swift; sourceTree = "<group>"; };
-		1BCB561FED45D1C86F1BDF86 /* com.ibrardev.Ozone.Helper */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = com.ibrardev.Ozone.Helper; sourceTree = BUILT_PRODUCTS_DIR; };
+		1BCB561FED45D1C86F1BDF86 /* OzoneHelper */ = {isa = PBXFileReference; includeInIndex = 0; path = OzoneHelper; sourceTree = BUILT_PRODUCTS_DIR; };
 		1CCCFAC2C8D4654AA28636C1 /* MouseControlView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MouseControlView.swift; sourceTree = "<group>"; };
 		1D8A61B83C3806C9EE5DDFBD /* MouseScrollService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MouseScrollService.swift; sourceTree = "<group>"; };
 		1E81211283E9C1D39960EADA /* MixerRoutingSupport.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MixerRoutingSupport.swift; sourceTree = "<group>"; };
@@ -107,8 +112,10 @@
 		34C8235D1ABB3355F53535E2 /* BatteryGuardXPCProtocol.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BatteryGuardXPCProtocol.swift; sourceTree = "<group>"; };
 		37E86777137D7F06AC20F396 /* CycleHistoryStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CycleHistoryStore.swift; sourceTree = "<group>"; };
 		385F744FE0E709BA8A3E77FA /* BatteryInfo.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BatteryInfo.swift; sourceTree = "<group>"; };
+		3CFCD35D332B80704319CB18 /* MenuBarPortsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MenuBarPortsView.swift; sourceTree = "<group>"; };
 		3E2DAA3358379D4788BF98E8 /* main.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = main.swift; sourceTree = "<group>"; };
 		5E3FA7A1D0550695B43439DD /* UninstallerViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UninstallerViewModel.swift; sourceTree = "<group>"; };
+		60256E0E20A0DD0DA72CAA6F /* PortManagerViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PortManagerViewModel.swift; sourceTree = "<group>"; };
 		689A26195BCBF48B05481E7E /* MixerRender.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MixerRender.swift; sourceTree = "<group>"; };
 		69FCFFBC0F3A8A68F5094494 /* LogView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LogView.swift; sourceTree = "<group>"; };
 		6F10360015D68614F2E4F61B /* BoostLimiter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BoostLimiter.swift; sourceTree = "<group>"; };
@@ -128,7 +135,9 @@
 		90E9013AC6690B0A97A5F7FA /* VolumeMixerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VolumeMixerView.swift; sourceTree = "<group>"; };
 		91EF1B6D91DA57BF699F1FE0 /* BatteryGuardApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BatteryGuardApp.swift; sourceTree = "<group>"; };
 		9C4C83F9B530BE17FFAA2075 /* Ozone.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Ozone.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		9F45C1497A4CFB0B57111EB0 /* PortManagerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PortManagerView.swift; sourceTree = "<group>"; };
 		A4AFFF60807184FC26277545 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
+		A8A89FBCDEFBDF460ADC6B5B /* PortProcessInfo.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PortProcessInfo.swift; sourceTree = "<group>"; };
 		AFA09F9F4F15A8588019B826 /* TemperatureMonitor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TemperatureMonitor.swift; sourceTree = "<group>"; };
 		B3E0E99599917620C1D6A827 /* StatusBarMetricView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StatusBarMetricView.swift; sourceTree = "<group>"; };
 		B5A68199B39F12549719ADE0 /* BatteryMonitor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BatteryMonitor.swift; sourceTree = "<group>"; };
@@ -140,6 +149,7 @@
 		CFB002782B3246DFA0F79933 /* CalibrationCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CalibrationCard.swift; sourceTree = "<group>"; };
 		D158A254CE0B3A9AE6CB8BCA /* PreferencesStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PreferencesStore.swift; sourceTree = "<group>"; };
 		D1BF1E32832F05B933A79470 /* RAMMonitor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RAMMonitor.swift; sourceTree = "<group>"; };
+		D8B3938BD59E2F1A00E96C48 /* PortMonitorService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PortMonitorService.swift; sourceTree = "<group>"; };
 		DA4A32A3C1E5D32667132804 /* MenuBarView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MenuBarView.swift; sourceTree = "<group>"; };
 		DA5C927A4F794046D37984F7 /* KeyboardModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KeyboardModels.swift; sourceTree = "<group>"; };
 		DF0A0238347EBCB45F571080 /* MenuBarAppKitLabel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MenuBarAppKitLabel.swift; sourceTree = "<group>"; };
@@ -211,6 +221,7 @@
 				CA18CA8BA2D560551AC88712 /* GPUStats.swift */,
 				DA5C927A4F794046D37984F7 /* KeyboardModels.swift */,
 				F01282B07A047409D030484D /* NetworkStats.swift */,
+				A8A89FBCDEFBDF460ADC6B5B /* PortProcessInfo.swift */,
 				C0DCD42CE060F6167BA85948 /* RAMStats.swift */,
 				82C8DE01CBF0114B249F66E0 /* TemperatureReading.swift */,
 				7433D417FFC7AF3A93F76D69 /* UninstallerModels.swift */,
@@ -223,7 +234,7 @@
 			isa = PBXGroup;
 			children = (
 				9C4C83F9B530BE17FFAA2075 /* Ozone.app */,
-				1BCB561FED45D1C86F1BDF86 /* com.ibrardev.Ozone.Helper */,
+				1BCB561FED45D1C86F1BDF86 /* OzoneHelper */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -262,6 +273,7 @@
 				1E81211283E9C1D39960EADA /* MixerRoutingSupport.swift */,
 				1D8A61B83C3806C9EE5DDFBD /* MouseScrollService.swift */,
 				8BEAA6E21F8F4C9110FDD07C /* NetworkSpeedMonitor.swift */,
+				D8B3938BD59E2F1A00E96C48 /* PortMonitorService.swift */,
 				D158A254CE0B3A9AE6CB8BCA /* PreferencesStore.swift */,
 				D1BF1E32832F05B933A79470 /* RAMMonitor.swift */,
 				DF371F5A19ACFE69D007A1E9 /* ResponsibleProcess.swift */,
@@ -285,6 +297,7 @@
 		7648CA4B21291935B186EE6E /* ViewModels */ = {
 			isa = PBXGroup;
 			children = (
+				60256E0E20A0DD0DA72CAA6F /* PortManagerViewModel.swift */,
 				F0FC3FB5528CC425474AC0FA /* SystemStatsViewModel.swift */,
 				5E3FA7A1D0550695B43439DD /* UninstallerViewModel.swift */,
 			);
@@ -305,6 +318,7 @@
 				E2057A71EDC6348144E64B49 /* KeyboardMonitorView.swift */,
 				1CCCFAC2C8D4654AA28636C1 /* MouseControlView.swift */,
 				8FEB263B6A195AAF5271EE23 /* NetworkSpeedCard.swift */,
+				9F45C1497A4CFB0B57111EB0 /* PortManagerView.swift */,
 				1F33C6ECF2D7AD45F7EE452E /* PowerAdapterCard.swift */,
 				BA6FF01ABE1BD8B55EBA441A /* PowerConsumptionCard.swift */,
 				077375645146AC6ED1D2E2BE /* PowerFlowCard.swift */,
@@ -334,6 +348,7 @@
 		BEAA2DB6B75BC09A999A83AC /* MenuBar */ = {
 			isa = PBXGroup;
 			children = (
+				3CFCD35D332B80704319CB18 /* MenuBarPortsView.swift */,
 				DA4A32A3C1E5D32667132804 /* MenuBarView.swift */,
 				B3E0E99599917620C1D6A827 /* StatusBarMetricView.swift */,
 			);
@@ -397,7 +412,7 @@
 			packageProductDependencies = (
 			);
 			productName = OzoneHelper;
-			productReference = 1BCB561FED45D1C86F1BDF86 /* com.ibrardev.Ozone.Helper */;
+			productReference = 1BCB561FED45D1C86F1BDF86 /* OzoneHelper */;
 			productType = "com.apple.product-type.tool";
 		};
 		92D0371CDAF27D7597B8117D /* Ozone */ = {
@@ -464,7 +479,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				B39EB6649AA318F4E4AE2C0C /* Assets.xcassets in Resources */,
-				79A9D1F34315613300808D74 /* com.ibrardev.Ozone.Helper in Resources */,
+				79A9D1F34315613300808D74 /* OzoneHelper in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -473,6 +488,7 @@
 /* Begin PBXShellScriptBuildPhase section */
 		9E698ADAAC17CEB1C607F027 /* Copy Helper & Plist to Bundle */ = {
 			isa = PBXShellScriptBuildPhase;
+			alwaysOutOfDate = 1;
 			buildActionMask = 2147483647;
 			files = (
 			);
@@ -525,6 +541,7 @@
 				BAD827D9D1C623A2259546A2 /* LevelHistoryStore.swift in Sources */,
 				08E29BDA407D1A98F908BB5F /* LogView.swift in Sources */,
 				58BB11089E8657CC83AD3ACF /* MenuBarAppKitLabel.swift in Sources */,
+				FD614AC251CB8DCA9DEDD1E8 /* MenuBarPortsView.swift in Sources */,
 				CF754EBB4760380E24ACEC04 /* MenuBarView.swift in Sources */,
 				0D9911C89A0E95A3C85D96D7 /* MixerRender.swift in Sources */,
 				180094FD787848BA4E2FE477 /* MixerRoutingSupport.swift in Sources */,
@@ -533,6 +550,10 @@
 				3960A8DEBF812F7926DB65EB /* NetworkSpeedCard.swift in Sources */,
 				89FB3CB81F247F5253D4D172 /* NetworkSpeedMonitor.swift in Sources */,
 				87FD84330282651A69F095DF /* NetworkStats.swift in Sources */,
+				EFF636669E11E132B1BA40E9 /* PortManagerView.swift in Sources */,
+				61B75DCC42535FE7EAE1650A /* PortManagerViewModel.swift in Sources */,
+				7FFFD80E5FABD753B64EA1F1 /* PortMonitorService.swift in Sources */,
+				BEDA13512AAF45FB5F8596F8 /* PortProcessInfo.swift in Sources */,
 				BFACDAD8347C292F0FBEC1FF /* PowerAdapterCard.swift in Sources */,
 				566AE900BA2A671A797D0F65 /* PowerConsumptionCard.swift in Sources */,
 				73EA50F48E5B4612A899F411 /* PowerFlowCard.swift in Sources */,
@@ -643,7 +664,6 @@
 		4DCB6201D61CAE59FC05776D /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				ARCHS = "$(ARCHS_STANDARD)";
 				CODE_SIGN_ENTITLEMENTS = BatteryGuardHelper/BatteryGuardHelper.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
@@ -673,8 +693,9 @@
 		AC90FD9F2B315C7D285D3393 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				ARCHS = "$(ARCHS_STANDARD)";
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GENERATE_ASSET_SYMBOLS = NO;
+				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = NO;
 				CODE_SIGN_ENTITLEMENTS = BatteryGuard/Resources/BatteryGuard.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
@@ -696,7 +717,6 @@
 		C4E1A8245B4924283FF62712 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				ARCHS = "$(ARCHS_STANDARD)";
 				CODE_SIGN_ENTITLEMENTS = BatteryGuardHelper/BatteryGuardHelper.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
@@ -792,8 +812,9 @@
 		E6AEC18F201A4F2252FF036D /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				ARCHS = "$(ARCHS_STANDARD)";
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GENERATE_ASSET_SYMBOLS = NO;
+				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = NO;
 				CODE_SIGN_ENTITLEMENTS = BatteryGuard/Resources/BatteryGuard.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
