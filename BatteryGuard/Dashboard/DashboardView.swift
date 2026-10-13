@@ -54,10 +54,6 @@ struct DashboardView: View {
         case .mouse:
             MouseControlView()
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
-        case .energyUse:
-            EnergyAppsCard()
-                .padding()
-                .frame(maxWidth: 500)
         case .volumeMixer:
             VolumeMixerView()
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
